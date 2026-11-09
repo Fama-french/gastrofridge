@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GastroFridge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..800;1,9..40,400..700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,600..900,0..100,0..1;1,9..144,600..900,0..100,0..1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#D33F31; --wine:#7A1C2E; --linen:#F9F6EE; --parchment:#F4EFEA; --ink:#1A1A1A; --ink2:#2C3038;
+  --mustard:#F4C430; --olive:#737953; --blue:#3A6073; --muted:#5E5A55;
+  --cloth:#F4EFEA; --check:rgba(211,63,49,.09); --thread:rgba(122,28,46,.045); --on-cloth:#2C3038;
+  --display:"Fraunces","Cooper Black","Cooper Std","Recoleta",Georgia,serif;
+  --sans:"DM Sans","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  /* Lights dimmed in the bistro: the tablecloth darkens, the paper stays paper */
+  :root{ --cloth:#221A18; --check:rgba(211,63,49,.2); --thread:rgba(244,239,234,.03); --on-cloth:#F4EFEA; color-scheme:dark; }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;color:var(--on-cloth);font:17px/1.55 var(--sans);overflow-x:hidden;
+  background-color:var(--cloth);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .25 0 0 0 0 .15 0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(0deg,var(--thread) 0 1px,transparent 1px 4px),
+    repeating-linear-gradient(90deg,var(--thread) 0 1px,transparent 1px 4px),
+    linear-gradient(90deg,transparent 2%,var(--check) 6%,var(--check) 44%,transparent 48%),
+    linear-gradient(0deg,transparent 2%,var(--check) 6%,var(--check) 44%,transparent 48%);
+  background-size:220px 220px,auto,auto,64px 64px,64px 64px;
+}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 0%,rgba(244,196,48,.16),transparent 55%),
+             radial-gradient(ellipse at 50% 45%,transparent 50%,rgba(122,28,46,.22) 100%)}
+@media (prefers-color-scheme:dark){ body::before{background:radial-gradient(ellipse at 50% 10%,rgba(244,196,48,.13),transparent 55%),radial-gradient(ellipse at 50% 45%,transparent 40%,rgba(0,0,0,.55) 100%)} }
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(14px,3vw,32px)}
+.display{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:900}
+
+/* Paper */
+.sheet{position:relative;background:var(--linen);color:var(--ink);color-scheme:light;border:3px solid var(--ink);border-radius:12px;box-shadow:6px 6px 0 var(--ink);padding:clamp(20px,3.2vw,36px)}
+.tilt-l{transform:rotate(-.5deg)} .tilt-r{transform:rotate(.45deg)}
+.tape{position:absolute;width:96px;height:26px;background:rgba(244,196,48,.78);border:1px solid rgba(26,26,26,.18);box-shadow:0 1px 2px rgba(0,0,0,.08);z-index:2}
+.tape.blue{background:rgba(58,96,115,.55)}
+
+/* Header */
+header.top{position:relative;margin:clamp(24px,5vw,56px) 0 0}
+.hero{text-align:center;padding:clamp(34px,6vw,64px) clamp(18px,5vw,64px) clamp(30px,5vw,52px)}
+.hero .tape{top:-14px;left:50%;transform:translateX(-50%) rotate(-2deg)}
+.badge-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:18px}
+.pill{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--ink);border-radius:999px;padding:3px 12px;font-size:.88rem;font-weight:600;background:var(--linen)}
+.pill.blue{background:var(--blue);color:var(--linen)} .pill.olive{background:var(--olive);color:var(--linen)} .pill.mustard{background:var(--mustard)}
+h1{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:900;font-size:clamp(3rem,11vw,7.4rem);line-height:.9;letter-spacing:-.025em;margin:0;color:var(--red);text-shadow:3px 3px 0 var(--ink),5px 5px 0 rgba(26,26,26,.18)}
+h1 .emo{font-size:.5em;text-shadow:none;vertical-align:.35em}
+.sub{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-style:italic;font-weight:600;font-size:clamp(1.25rem,2.6vw,1.75rem);color:var(--wine);margin:14px 0 6px}
+.lede{max-width:52ch;margin:0 auto;color:var(--ink2)}
+.top-nav{display:flex;justify-content:center;gap:10px;margin-top:22px;flex-wrap:wrap}
+.sticker{position:absolute;pointer-events:none;filter:drop-shadow(3px 3px 0 rgba(26,26,26,.9))}
+.st-wine{width:clamp(56px,8vw,92px);top:-26px;right:clamp(-10px,2vw,30px);transform:rotate(14deg)}
+.st-baguette{width:clamp(130px,19vw,230px);bottom:-30px;left:clamp(-14px,1vw,20px);transform:rotate(-9deg)}
+.st-star{width:34px;filter:none}
+.st-star.a{top:22px;left:9%;transform:rotate(-12deg)} .st-star.b{top:38%;right:6%;width:26px} .st-star.c{bottom:24%;left:16%;width:20px}
+@media (max-width:620px){.st-star.b,.st-star.c{display:none}}
+@media (prefers-reduced-motion:no-preference){
+  .st-wine{animation:bob 4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:rotate(14deg) translateY(0)}50%{transform:rotate(9deg) translateY(-6px)}}
+}
+.start{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin:14px clamp(0px,6vw,80px) -6px 0;color:var(--on-cloth)}
+.start span{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-style:italic;font-weight:700;font-size:1.3rem;transform:rotate(-4deg)}
+.start svg{width:80px;height:60px}
+
+/* Section headings */
+h2{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:900;font-size:clamp(1.7rem,3.6vw,2.5rem);line-height:1.05;margin:0;letter-spacing:-.01em}
+section.block{margin-top:clamp(40px,6vw,64px)}
+.block-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px 16px;margin-bottom:18px}
+.block-head .k{font-size:.92rem;font-weight:600;color:var(--muted)}
+.block .tape{top:-15px;left:28px;transform:rotate(-4deg)}
+.block.tilt-r .tape{left:auto;right:36px;transform:rotate(5deg)}
+
+/* Search & buttons */
+.search{display:flex;align-items:center;gap:10px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:0 8px 0 18px;min-height:58px;box-shadow:inset 2px 2px 0 rgba(26,26,26,.08)}
+.search input{flex:1;border:0;background:transparent;font-size:1.1rem;min-height:52px;outline:none;color:var(--ink)}
+.search input::placeholder{color:#8B857D}
+.search-x{border:0;background:none;font-size:1.5rem;cursor:pointer;min-width:44px;min-height:44px;color:var(--ink)}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0 4px}
+.btn{border:2.5px solid var(--ink);background:var(--linen);color:var(--ink);border-radius:999px;padding:0 20px;min-height:48px;cursor:pointer;font-weight:700;box-shadow:3px 3px 0 var(--ink);transition:transform .35s var(--spring),box-shadow .2s}
+.btn:hover{transform:translate(-2px,-2px) rotate(-1.5deg);box-shadow:5px 5px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);transition-duration:.08s}
+.btn.red{background:var(--red);color:var(--linen)}
+.btn.mustard{background:var(--mustard)}
+.btn.olive{background:var(--olive);color:var(--linen)}
+.status{min-height:1.5em;margin:8px 0 0;color:var(--wine);font-weight:700}
+
+/* Ingredient categories */
+.cats{margin-top:12px}
+.cat{border-top:2px dashed rgba(26,26,26,.25)}
+.cat summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:60px;padding:6px 2px}
+.cat summary::-webkit-details-marker{display:none}
+.cat-name{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:800;font-size:1.4rem;display:flex;align-items:center;gap:10px}
+.cat-name::before{content:"+";display:inline-grid;place-items:center;width:28px;height:28px;border:2px solid var(--ink);border-radius:50%;font:700 1.05rem/1 var(--sans);background:var(--mustard);transition:transform .4s var(--spring)}
+.cat[open] .cat-name::before{content:"−";transform:rotate(180deg);background:var(--linen)}
+.cat-count{font-size:.9rem;font-weight:600;color:var(--muted);white-space:nowrap;border:2px solid var(--ink);border-radius:999px;padding:2px 10px;background:var(--parchment)}
+.cat-count b{color:var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;padding:4px 2px 22px}
+.chip{position:relative;display:inline-flex}
+.chip input{position:absolute;opacity:0;width:1px;height:1px}
+.chip span{display:inline-flex;align-items:center;gap:6px;min-height:46px;padding:0 16px;border-radius:999px;border:2px solid var(--ink);background:var(--linen);cursor:pointer;user-select:none;box-shadow:2px 2px 0 var(--ink);transition:transform .35s var(--spring),background .15s,box-shadow .2s}
+.chip span:hover{transform:translateY(-2px) rotate(-2deg)}
+.chip input:checked + span{background:var(--red);color:var(--linen);transform:rotate(-1.5deg);box-shadow:3px 3px 0 var(--ink)}
+.chip input:checked + span::before{content:"✓";font-weight:700}
+.chip:nth-child(even) input:checked + span{transform:rotate(1.5deg)}
+.chip input:focus-visible + span{outline:3px solid var(--blue);outline-offset:3px}
+.search-empty{color:var(--muted);padding:12px 0}
+
+/* Filters */
+.filters{display:grid;gap:22px}
+@media(min-width:960px){.filters{grid-template-columns:auto auto 1fr;gap:36px}}
+.fgroup{border:0;margin:0;padding:0;min-width:0}
+.fgroup legend{font-weight:700;margin-bottom:10px;padding:0}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{min-height:44px;padding:0 15px;border-radius:999px;border:2px solid var(--ink);background:var(--linen);cursor:pointer;box-shadow:2px 2px 0 var(--ink);transition:transform .35s var(--spring)}
+.seg button:hover{transform:translateY(-2px)}
+.seg button[aria-pressed="true"]{background:var(--blue);color:var(--linen);font-weight:700;transform:rotate(-2deg)}
+
+/* Tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:14px;margin-top:clamp(48px,7vw,80px)}
+.tabs button{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:800;font-size:clamp(1.15rem,2.4vw,1.5rem);border:3px solid var(--ink);border-radius:14px;background:var(--linen);color:var(--ink);padding:10px 22px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .4s var(--spring),box-shadow .2s}
+.tabs button:nth-child(1){transform:rotate(-1.5deg)} .tabs button:nth-child(2){transform:rotate(1.2deg)}
+.tabs button:hover{transform:translateY(-3px) rotate(0)}
+.tabs button[aria-selected="true"]{background:var(--wine);color:var(--linen);box-shadow:5px 5px 0 var(--ink)}
+
+/* Result section labels: paper tags on the cloth */
+.section-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;width:fit-content;max-width:100%;margin:46px 0 26px;background:var(--linen);color:var(--ink);border:3px solid var(--ink);border-radius:10px;padding:10px 18px;box-shadow:4px 4px 0 var(--ink);transform:rotate(-1deg)}
+.section-head h2{font-size:clamp(1.3rem,2.8vw,1.8rem)}
+.section-head .sub-k{flex-basis:100%;margin-top:-4px;font-style:italic;color:var(--muted)}
+.count{font-weight:700;font-size:.92rem;background:var(--mustard);border:2px solid var(--ink);border-radius:999px;padding:2px 10px;white-space:nowrap}
+
+/* Recipe cards */
+.grid{display:grid;gap:34px 26px;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));padding:12px 6px 6px}
+.card{all:unset;box-sizing:border-box;position:relative;display:flex;flex-direction:column;gap:10px;background:var(--linen);color:var(--ink);border:2.5px solid var(--ink);border-radius:8px;padding:26px 20px 18px;box-shadow:5px 5px 0 var(--ink);cursor:pointer;transform:rotate(var(--r,0deg));transition:transform .5s var(--spring),box-shadow .25s}
+.card:nth-child(3n+1){--r:-1.1deg} .card:nth-child(3n+2){--r:.8deg} .card:nth-child(3n){--r:-.4deg}
+.card::before{content:"";position:absolute;top:-13px;left:50%;width:82px;height:24px;transform:translateX(-50%) rotate(-3deg);background:rgba(244,196,48,.8);border:1px solid rgba(26,26,26,.18)}
+.card:nth-child(even)::before{background:rgba(58,96,115,.5);transform:translateX(-50%) rotate(4deg)}
+.card:hover{transform:rotate(0) translateY(-6px) scale(1.025);box-shadow:9px 10px 0 var(--ink)}
+.card:active{transform:scale(.98);box-shadow:2px 2px 0 var(--ink);transition-duration:.1s}
+.card:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
+.r-main{display:flex;flex-direction:column;gap:4px}
+.r-fr{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:900;font-size:1.6rem;line-height:1.05;color:var(--wine)}
+.r-en{font-style:italic;color:var(--muted)}
+.r-cols{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:.93rem;margin-top:auto;padding-top:10px;border-top:2px dashed rgba(26,26,26,.2)}
+.r-region{background:var(--blue);color:var(--linen);border:2px solid var(--ink);border-radius:999px;padding:1px 10px;font-weight:700;font-size:.85rem}
+.rest{color:var(--muted);font-size:.83rem}
+.hats{display:inline-flex;gap:1px;color:var(--wine)}
+.hats svg{width:21px;height:21px}
+.hats .off{opacity:.22}
+.match{display:flex;align-items:center;gap:10px;width:100%;font-weight:600;font-size:.88rem;white-space:nowrap}
+.bar{flex:1;height:12px;background:var(--parchment);border:2px solid var(--ink);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--olive)}
+.missing{align-self:flex-start;color:var(--red);font-weight:700}
+.ready{align-self:flex-start;color:var(--olive);font-weight:800;border:2px dashed var(--olive);border-radius:6px;padding:1px 8px;transform:rotate(-3deg);text-transform:none}
+
+/* Notes */
+.hint{position:relative;margin:40px auto 0;max-width:720px;background:var(--mustard);color:var(--ink);border:3px solid var(--ink);border-radius:6px;box-shadow:6px 6px 0 var(--ink);padding:26px 24px 20px;transform:rotate(1deg);display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px}
+.hint::before{content:"";position:absolute;top:-14px;left:40px;width:90px;height:26px;background:rgba(249,246,238,.75);border:1px solid rgba(26,26,26,.18);transform:rotate(-5deg)}
+.hint p{margin:0;flex:1 1 300px}
+.hint strong{display:block;font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:900;font-size:1.6rem;line-height:1.1;margin-top:4px}
+.notice{position:relative;background:var(--linen);color:var(--ink);border:3px solid var(--ink);border-radius:12px;box-shadow:6px 6px 0 var(--ink);padding:28px 26px;margin-top:36px;transform:rotate(-.6deg)}
+.notice h3{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:900;font-size:clamp(1.5rem,3vw,2.1rem);line-height:1.1;margin:0 0 8px;color:var(--wine)}
+.notice p{margin:.2rem 0 1rem;max-width:62ch}
+.notice .actions{margin-bottom:0}
+.empty-line{display:inline-block;background:var(--linen);color:var(--ink);border:2px solid var(--ink);border-radius:8px;padding:10px 16px;margin:0;font-style:italic;transform:rotate(.6deg)}
+
+/* Jump sticker */
+.jump{position:sticky;bottom:16px;z-index:5;display:flex;justify-content:center;margin-top:24px;pointer-events:none}
+.jump a{pointer-events:auto;background:var(--red);color:var(--linen);font-weight:700;text-decoration:none;border:2.5px solid var(--ink);border-radius:999px;padding:0 22px;min-height:50px;display:inline-flex;align-items:center;box-shadow:4px 4px 0 var(--ink);transition:transform .35s var(--spring)}
+.jump a:hover{transform:scale(1.05) rotate(-2deg)}
+
+/* Recipe dialog: a big recipe card */
+dialog{border:3px solid var(--ink);padding:0;background:var(--linen);color:var(--ink);color-scheme:light;width:min(720px,94vw);max-height:90vh;border-radius:14px;box-shadow:10px 10px 0 var(--ink);overflow:auto}
+dialog::backdrop{background:rgba(42,20,20,.55);backdrop-filter:blur(2px)}
+@media(max-width:640px){dialog{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0;box-shadow:none}}
+.d-head{position:relative;padding:30px clamp(20px,4vw,36px) 24px;background-color:var(--wine);color:var(--linen);border-bottom:3px solid var(--ink);
+  background-image:linear-gradient(90deg,rgba(249,246,238,.09) 50%,transparent 50%),linear-gradient(0deg,rgba(249,246,238,.09) 50%,transparent 50%);background-size:28px 28px}
+.d-head h2{font-size:clamp(2rem,6vw,3rem);color:var(--linen);text-shadow:3px 3px 0 var(--ink);margin:0 52px 8px 0}
+.d-head .en{font-style:italic;opacity:.9}
+.d-head .meta{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:14px;font-weight:600}
+.d-head .hats{color:var(--mustard)}
+.x{position:absolute;top:16px;right:16px;width:48px;height:48px;border-radius:50%;border:2.5px solid var(--ink);background:var(--mustard);color:var(--ink);font-size:1.5rem;cursor:pointer;box-shadow:3px 3px 0 var(--ink);transition:transform .4s var(--spring)}
+.x:hover{transform:rotate(90deg) scale(1.08)}
+.d-body{padding:16px clamp(20px,4vw,36px) 34px}
+.d-body h3{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:900;font-size:1.55rem;color:var(--wine);margin:24px 0 8px}
+.ings{list-style:none;padding:0;margin:0}
+.ings li{display:flex;gap:12px;align-items:baseline;padding:9px 0;border-bottom:2px dotted rgba(26,26,26,.25)}
+.ings .mk{flex:none;width:1.6em;height:1.6em;display:inline-grid;place-items:center;border-radius:50%;font-weight:800;font-size:.85rem;border:2px solid var(--ink)}
+.ings .ok .mk{background:var(--olive);color:var(--linen)}
+.ings .no{color:var(--red);font-weight:600}
+.ings .no .mk{background:var(--red);color:var(--linen)}
+.ings .opt .mk{background:var(--parchment);color:var(--muted)}
+.ings .q{color:var(--muted);margin-left:auto;text-align:right;font-size:.95rem;font-weight:400}
+.ings .no .q{color:var(--red)}
+.steps{padding:0;margin:0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:42px 1fr;gap:12px;padding:10px 0;font-size:1.05rem;line-height:1.6}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--red);color:var(--linen);border:2.5px solid var(--ink);font-family:var(--display);font-weight:900;box-shadow:2px 2px 0 var(--ink)}
+.steps li:nth-child(even)::before{background:var(--blue)}
+.tip{position:relative;margin:30px 6px 0;background:var(--mustard);border:2.5px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 var(--ink);padding:22px 20px 16px;transform:rotate(-1deg)}
+.tip b{position:absolute;top:-16px;left:16px;background:var(--wine);color:var(--linen);border:2px solid var(--ink);border-radius:999px;padding:2px 14px;font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-style:italic;font-weight:800;transform:rotate(-3deg)}
+.d-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.yt{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:var(--linen);border:2.5px solid var(--ink);border-radius:999px;padding:0 22px;min-height:50px;font-weight:700;text-decoration:none;box-shadow:3px 3px 0 var(--ink);transition:transform .35s var(--spring),box-shadow .2s}
+.yt:hover{transform:translate(-2px,-2px) rotate(-1.5deg);box-shadow:5px 5px 0 var(--ink)}
+@media (prefers-reduced-motion:no-preference){
+  dialog[open]{animation:drop .5s var(--spring)}
+  @keyframes drop{from{opacity:0;transform:translateY(24px) rotate(-3deg) scale(.96)}to{opacity:1;transform:none}}
+}
+
+/* Region map */
+.map-layout{display:grid;gap:34px;margin-top:30px}
+@media(min-width:960px){.map-layout{grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:start}.map-wrap{position:sticky;top:16px}}
+.map-wrap{transform:rotate(-.6deg)}
+.map-wrap svg{width:100%;height:auto;display:block;max-width:600px;margin:0 auto}
+.land{fill:var(--parchment);stroke:var(--ink);stroke-width:2.6;stroke-linejoin:round}
+.pin{cursor:pointer}
+.pin .dot{fill:var(--red);stroke:var(--ink);stroke-width:2.5;transition:fill .2s}
+.pin .ring{fill:none;stroke:var(--olive);stroke-width:3.5;stroke-dasharray:5 3}
+.pin .n{fill:var(--linen);font:800 14px var(--sans);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.pin .lb{fill:var(--ink);font:700 17px var(--sans);paint-order:stroke;stroke:var(--parchment);stroke-width:5px;stroke-linejoin:round}
+.pin:hover .dot,.pin.on .dot{fill:var(--mustard)}
+.pin:hover .n,.pin.on .n{fill:var(--ink)}
+.pin.on .lb{fill:var(--wine)}
+.pin:focus{outline:none}
+.pin:focus-visible .dot{stroke:var(--blue);stroke-width:5}
+.map-key{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem;font-weight:600;margin:14px 0 0;justify-content:center}
+.map-key span{display:inline-flex;align-items:center;gap:8px}
+.key-dot{width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid var(--ink)}
+.key-ring{width:16px;height:16px;border-radius:50%;border:3px dashed var(--olive)}
+.region-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.region-chips button{min-height:42px;padding:0 13px;border-radius:999px;border:2px solid var(--ink);background:var(--linen);cursor:pointer;font-size:.92rem;box-shadow:2px 2px 0 var(--ink);transition:transform .35s var(--spring)}
+.region-chips button:hover{transform:translateY(-2px) rotate(-1.5deg)}
+.region-chips button[aria-pressed="true"]{background:var(--mustard);font-weight:700}
+.region-panel .section-head{margin-top:6px}
+.region-note{display:inline-block;background:var(--linen);color:var(--ink);border:2px solid var(--ink);border-radius:8px;padding:8px 14px;margin:-8px 0 8px;transform:rotate(.5deg)}
+.region-panel .grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+
+footer{margin:72px auto 40px;max-width:640px;text-align:center;background:var(--linen);color:var(--ink);border:2.5px solid var(--ink);border-radius:10px;box-shadow:4px 4px 0 var(--ink);padding:18px 22px;transform:rotate(-.8deg);font-size:.93rem}
+footer b{font-family:var(--display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:900;color:var(--red);font-size:1.15rem}
+
+@media (max-width:620px){
+  .tilt-l,.tilt-r,.map-wrap{transform:none}
+  .sheet{box-shadow:4px 4px 0 var(--ink)}
+  .st-star.a{display:none}
+  h1{font-size:2.7rem}
+  .grid{gap:30px 0;padding:12px 4px 4px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="sheet hero tilt-l">
+      <span class="tape" aria-hidden="true"></span>
+      <!-- Cheerful wine bottle sticker -->
+      <svg class="sticker st-wine" viewBox="0 0 70 160" aria-hidden="true">
+        <rect x="25" y="4" width="20" height="16" rx="3" fill="#F4C430" stroke="#1A1A1A" stroke-width="3"/>
+        <path d="M27 20h16v26c0 8 17 14 17 34v64a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V80c0-20 17-26 17-34z" fill="#7A1C2E" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round"/>
+        <path d="M17 86v40" stroke="#F9F6EE" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+        <rect x="16" y="92" width="38" height="36" rx="4" fill="#F9F6EE" stroke="#1A1A1A" stroke-width="3"/>
+        <circle cx="28" cy="105" r="2.6" fill="#1A1A1A"/><circle cx="42" cy="105" r="2.6" fill="#1A1A1A"/>
+        <path d="M27 113q8 7 16 0" fill="none" stroke="#1A1A1A" stroke-width="2.6" stroke-linecap="round"/>
+        <circle cx="23" cy="112" r="2.6" fill="#D33F31" opacity=".7"/><circle cx="47" cy="112" r="2.6" fill="#D33F31" opacity=".7"/>
+      </svg>
+      <!-- Baguette wearing a beret -->
+      <svg class="sticker st-baguette" viewBox="0 0 240 90" aria-hidden="true">
+        <g transform="rotate(-6 120 50)">
+          <rect x="8" y="38" width="210" height="38" rx="19" fill="#E2A65A" stroke="#1A1A1A" stroke-width="3.5"/>
+          <path d="M40 46l14 22M78 46l14 22M116 46l14 22M154 46l14 22" stroke="#B9763A" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="196" cy="54" r="2.8" fill="#1A1A1A"/><circle cx="182" cy="54" r="2.8" fill="#1A1A1A"/>
+          <path d="M182 63q7 6 14 0" fill="none" stroke="#1A1A1A" stroke-width="2.6" stroke-linecap="round"/>
+          <ellipse cx="196" cy="36" rx="30" ry="10" fill="#2C3038" stroke="#1A1A1A" stroke-width="3" transform="rotate(-10 196 36)"/>
+          <path d="M200 24l4-9" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <svg class="sticker st-star a" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2c2 10 8 16 18 18-10 2-16 8-18 18-2-10-8-16-18-18C12 18 18 12 20 2z" fill="#F4C430" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      <svg class="sticker st-star b" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2c2 10 8 16 18 18-10 2-16 8-18 18-2-10-8-16-18-18C12 18 18 12 20 2z" fill="#D33F31" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      <svg class="sticker st-star c" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2c2 10 8 16 18 18-10 2-16 8-18 18-2-10-8-16-18-18C12 18 18 12 20 2z" fill="#3A6073" stroke="#1A1A1A" stroke-width="2.5" stroke-linejoin="round"/></svg>
+
+      <div class="badge-row">
+        <span class="pill mustard">C'est chouette !</span>
+        <span class="pill blue" id="meta-count"></span>
+        <span class="pill olive">Fait maison</span>
+      </div>
+      <h1>GastroFridge <span class="emo">🧀🥖</span></h1>
+      <p class="sub">Cuisine française avec ce que vous avez</p>
+      <p class="lede">Open the fridge, tick what's hiding in there, and we'll tell you what Grand-mère would cook with it tonight.</p>
+      <nav class="top-nav" aria-label="Sections">
+        <a class="btn mustard" href="#h-fridge" style="display:inline-flex;align-items:center;text-decoration:none">Start cooking</a>
+        <a class="btn" href="#tab-map" id="nav-map" style="display:inline-flex;align-items:center;text-decoration:none">Tour de France map</a>
+      </nav>
+    </div>
+    <div class="start" aria-hidden="true">
+      <span>start here !</span>
+      <svg viewBox="0 0 80 60"><path d="M6 10c22-6 44 0 50 18 3 9 0 18-6 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M40 44l10 9 6-13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </header>
+
+  <section class="block sheet tilt-r" aria-labelledby="h-fridge">
+    <span class="tape blue" aria-hidden="true"></span>
+    <div class="block-head"><h2 id="h-fridge">What's in the fridge?</h2><span class="k" id="fridge-total"></span></div>
+    <div class="search">
+      <span aria-hidden="true">🔍</span>
+      <input id="search" type="search" placeholder="Search the fridge… try “crème”" aria-label="Find an ingredient" autocomplete="off">
+      <button class="search-x" id="search-x" type="button" aria-label="Clear search" hidden>×</button>
+    </div>
+    <div class="actions">
+      <button class="btn" id="clear" type="button">Clear all</button>
+      <button class="btn olive" id="staples" type="button">Reset staples</button>
+      <button class="btn red" id="surprise" type="button">🎲 Surprise me !</button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+    <div class="cats" id="cats"></div>
+    <p class="search-empty" id="search-empty" hidden>No ingredient matches that search.</p>
+  </section>
+
+  <section class="block sheet tilt-l" aria-labelledby="h-filters">
+    <span class="tape" aria-hidden="true"></span>
+    <div class="block-head"><h2 id="h-filters">How hungry, how patient?</h2><span class="k">Filters for your fridge matches</span></div>
+    <div class="filters">
+      <fieldset class="fgroup"><legend>Max total time</legend><div class="seg" id="f-time"></div></fieldset>
+      <fieldset class="fgroup"><legend>Difficulty</legend><div class="seg" id="f-diff"></div></fieldset>
+      <fieldset class="fgroup"><legend>Dish type</legend><div class="seg" id="f-type"></div></fieldset>
+    </div>
+  </section>
+
+  <div class="tabs" role="tablist" aria-label="How to browse recipes">
+    <button type="button" role="tab" id="tab-fridge" aria-controls="results" data-view="fridge">🧊 From my fridge</button>
+    <button type="button" role="tab" id="tab-map" aria-controls="map-view" data-view="map">🗺️ Tour de France</button>
+  </div>
+
+  <div id="results" role="tabpanel" aria-labelledby="tab-fridge" aria-live="polite"></div>
+
+  <section id="map-view" role="tabpanel" aria-labelledby="tab-map" hidden>
+    <div class="map-layout">
+      <div class="map-wrap sheet">
+        <svg id="map" role="group" aria-label="Map of France. Choose a region to see its dishes."></svg>
+        <div class="map-key"><span><i class="key-dot"></i>Number of dishes</span><span><i class="key-ring"></i>You can cook one now</span></div>
+        <div class="region-chips" id="region-chips"></div>
+      </div>
+      <div class="region-panel" id="region-panel" aria-live="polite"></div>
+    </div>
+  </section>
+  <div class="jump" id="jump"><a href="#results" id="jump-link"></a></div>
+
+  <footer><b>Bon appétit !</b><br>Chilling and resting times are shown on each recipe but not counted in the time filter.</footer>
+</div>
+
+<dialog id="detail" aria-labelledby="d-title"><div id="detail-inner"></div></dialog>
+
+<script>
+const CATS = [
+  { name: "Staples", items: ["salt","pepper","olive oil","butter","flour","sugar","water"] },
+  { name: "Dairy & eggs", items: ["eggs","milk","crème fraîche","heavy cream","gruyère","comté","emmental","parmesan","goat cheese","roquefort","brie/camembert","reblochon","raclette cheese","yogurt"] },
+  { name: "Meat & fish", items: ["chicken","beef (stewing)","beef steak","ground beef","lardons/bacon","ham","duck","sausage","salmon","smoked salmon","white fish","mussels","shrimp","canned tuna","anchovies","lamb","pork","rabbit","scallops","trout"] },
+  { name: "Vegetables", items: ["onions","shallots","garlic","potatoes","carrots","leeks","mushrooms","tomatoes","zucchini","eggplant","bell peppers","spinach","green beans","lettuce","celery","endives","celeriac","pumpkin","cauliflower","peas"] },
+  { name: "Fruit", items: ["lemon","apples","pears","berries","cherries","orange"] },
+  { name: "Pantry", items: ["rice","pasta","bread/baguette","dried lentils","canned white beans","stock cubes","canned tomatoes","Dijon mustard","white wine","red wine","beer","vinegar","honey","chocolate","yeast","baking powder","breadcrumbs","olives","prunes","walnuts","cornichons","vegetable oil","buckwheat flour","capers","puff pastry","cider","sauerkraut","almonds"] },
+  { name: "Herbs & spices", items: ["thyme","bay leaf","parsley","chives","tarragon","basil","herbes de Provence","nutmeg","paprika","cinnamon","vanilla","saffron"] }
+];
+
+const RECIPES = [
+{ id:"omelette", fr:"Omelette aux fines herbes", en:"Herb omelette", reg:"Paris", type:"Breakfast & snack", t:10, d:1, serves:1,
+  ing:"eggs:3; butter:15 g; chives:1 tbsp, chopped; parsley:1 tbsp, chopped; salt:a pinch; pepper:to taste",
+  opt:"tarragon:1 tsp, chopped",
+  steps:["Beat the eggs with salt and pepper until just combined.","Stir in most of the chopped herbs.","Melt the butter in a non-stick pan over medium heat until it foams.","Pour in the eggs and stir quickly with a fork for about 20 seconds while shaking the pan.","Stop stirring when the eggs are softly set but still a little runny on top.","Fold the omelette in three and slide it onto a plate, seam side down.","Scatter the remaining herbs on top and eat straight away."],
+  tip:"Take it off the heat while it still looks slightly underdone. It keeps cooking on the plate." },
+
+{ id:"croque-monsieur", fr:"Croque-monsieur", en:"Toasted ham and cheese with béchamel", reg:"Paris", type:"Breakfast & snack", t:25, d:1, serves:2,
+  ing:"bread/baguette:4 slices of sandwich bread; ham:2 slices; gruyère:100 g, grated; butter:30 g; flour:15 g; milk:150 ml; salt:a pinch; pepper:to taste",
+  opt:"nutmeg:a pinch; Dijon mustard:1 tsp",
+  steps:["Heat the oven to 200 °C, on the grill setting if you have one.","Make a quick béchamel: melt 15 g butter, stir in the flour for 1 minute, then whisk in the milk until thick. Season with salt, pepper and nutmeg.","Butter one side of each slice of bread.","On the unbuttered sides, spread a little béchamel (and mustard), then add the ham and half the gruyère.","Close the sandwiches with the buttered sides facing out.","Spread the rest of the béchamel on top and cover with the remaining gruyère.","Bake for 10–12 minutes until bubbling and golden."],
+  tip:"No sandwich bread? Thick slices of baguette cut lengthways work just as well." },
+
+{ id:"croque-madame", fr:"Croque-madame", en:"Croque-monsieur topped with a fried egg", reg:"Paris", type:"Breakfast & snack", t:30, d:2, serves:2,
+  ing:"bread/baguette:4 slices of sandwich bread; ham:2 slices; gruyère:100 g, grated; eggs:2; butter:40 g; flour:15 g; milk:150 ml; salt:a pinch; pepper:to taste",
+  opt:"nutmeg:a pinch; Dijon mustard:1 tsp",
+  steps:["Heat the oven to 200 °C.","Make a béchamel: melt 15 g butter, stir in the flour for 1 minute, then whisk in the milk until thick. Season.","Butter one side of each slice of bread.","Build the sandwiches with béchamel, ham and half the gruyère inside, buttered sides out.","Top with the remaining béchamel and gruyère and bake for 10–12 minutes.","While they bake, fry the eggs in the rest of the butter until the whites are set and the yolks still runny.","Slide one egg on top of each croque and serve."],
+  tip:"The egg on top is said to look like a lady's hat, which is where the 'madame' comes from." },
+
+{ id:"oeufs-cocotte", fr:"Œufs cocotte", en:"Baked eggs in cream", reg:"Normandie", type:"Breakfast & snack", t:15, d:1, serves:2,
+  ing:"eggs:2; crème fraîche:2 tbsp; butter:10 g; salt:a pinch; pepper:to taste",
+  opt:"chives:1 tbsp, chopped; ham:1 slice, diced; gruyère:20 g, grated; spinach:a handful, wilted",
+  steps:["Heat the oven to 180 °C and boil a kettle.","Butter two small ramekins.","Put a spoonful of crème fraîche in each one, with diced ham if you like.","Crack an egg into each ramekin and season with salt and pepper.","Stand the ramekins in a baking dish and pour hot water halfway up their sides.","Bake for 8–10 minutes, until the whites are set and the yolks still soft.","Top with chives and serve with strips of toast for dipping."],
+  tip:"Take them out when the white is just set but the yolk still wobbles. They firm up fast." },
+
+{ id:"quiche-lorraine", fr:"Quiche lorraine", en:"Bacon and egg tart", reg:"Lorraine", type:"Main", t:75, d:2, serves:6,
+  ing:"flour:200 g; butter:100 g, cold; water:3–4 tbsp, ice-cold; salt:a pinch; eggs:3; crème fraîche:200 ml; milk:200 ml; lardons/bacon:200 g; pepper:to taste",
+  opt:"nutmeg:a pinch; gruyère:80 g, grated",
+  steps:["Rub the flour, salt and cold diced butter together until it looks like breadcrumbs. Add cold water a spoonful at a time until the dough holds. Chill for 20 minutes.","Heat the oven to 200 °C.","Roll out the dough, line a 24 cm tart tin and prick the base with a fork. Bake it empty for 10 minutes.","Fry the lardons in a dry pan until golden, then drain on paper.","Whisk the eggs, crème fraîche, milk, pepper and nutmeg together.","Scatter the lardons over the pastry and pour in the egg mixture.","Lower the oven to 180 °C and bake for 30–35 minutes until just set and golden.","Let it rest for 10 minutes before slicing."],
+  tip:"Don't salt the filling: the lardons bring plenty. The original Lorraine version has no cheese at all." },
+
+{ id:"tarte-flambee", fr:"Tarte flambée", en:"Alsatian flatbread with cream, onion and bacon", reg:"Alsace", type:"Main", t:35, d:2, serves:2,
+  ing:"flour:200 g; water:110 ml; olive oil:2 tbsp; salt:½ tsp; crème fraîche:200 g; onions:2; lardons/bacon:150 g",
+  opt:"nutmeg:a pinch; pepper:to taste",
+  steps:["Heat the oven as hot as it goes (250 °C or more) with a baking tray inside.","Mix the flour, water, oil and salt into a smooth dough and knead for 3 minutes.","Slice the onions as thinly as you can.","Roll the dough out paper-thin on a sheet of baking paper.","Spread the crème fraîche almost to the edges and season with pepper and nutmeg.","Scatter over the onions and the raw lardons.","Slide the paper onto the hot tray and bake for 10–12 minutes until the edges are charred in places."],
+  tip:"Thin is everything. In Alsace they mix fromage blanc into the crème fraîche for extra tang." },
+
+{ id:"salade-nicoise", fr:"Salade niçoise", en:"Niçoise salad", reg:"Provence", type:"Starter", t:25, d:1, serves:4,
+  ing:"eggs:4; tomatoes:4; green beans:200 g; canned tuna:1 can (about 160 g); olives:a handful, black; olive oil:4 tbsp; vinegar:1 tbsp; salt:a pinch; pepper:to taste",
+  opt:"lettuce:a few leaves; anchovies:8 fillets; bell peppers:1, thinly sliced",
+  steps:["Boil the eggs for 9 minutes, cool them in cold water, then peel and cut into quarters.","Cook the green beans in salted boiling water for 5 minutes, drain and rinse under cold water.","Cut the tomatoes into wedges and salt them lightly.","Whisk the olive oil, vinegar, salt and pepper together.","Arrange the tomatoes, beans, tuna, eggs and olives on a platter (with lettuce, anchovies and peppers if you have them).","Pour over the dressing just before serving."],
+  tip:"In Nice, cooks often use raw young broad beans or artichokes instead of cooked green beans. Any crunchy vegetable works." },
+
+{ id:"salade-lyonnaise", fr:"Salade lyonnaise", en:"Frisée salad with bacon and poached egg", reg:"Lyon", type:"Starter", t:20, d:2, serves:2,
+  ing:"lettuce:1 head, frisée if possible; lardons/bacon:150 g; eggs:2; bread/baguette:2 slices; vinegar:1 tbsp, plus a splash; Dijon mustard:1 tsp; olive oil:3 tbsp; salt:a pinch; pepper:to taste",
+  opt:"shallots:1, finely chopped",
+  steps:["Wash and dry the lettuce and tear it into a large bowl.","Cut the bread into cubes. Fry the lardons in a dry pan until crisp, then add the bread and toss it in the fat until golden.","Whisk the mustard, vinegar, oil, salt, pepper and shallot together.","Bring a pan of water with a splash of vinegar to a gentle simmer. Crack each egg into a cup, slide it in and poach for 3 minutes.","Toss the lettuce with the dressing, lardons and croutons.","Top each plate with a poached egg and plenty of black pepper."],
+  tip:"Very fresh eggs hold together best when poached. Older ones spread out in the water." },
+
+{ id:"soupe-oignon", fr:"Soupe à l'oignon gratinée", en:"French onion soup", reg:"Paris", type:"Starter", t:70, d:2, serves:4,
+  ing:"onions:1 kg; butter:50 g; flour:1 tbsp; white wine:150 ml; stock cubes:2, beef; water:1.2 l; bread/baguette:8 slices; gruyère:150 g, grated; salt:to taste; pepper:to taste",
+  opt:"thyme:2 sprigs",
+  steps:["Slice the onions thinly.","Melt the butter in a large pot and cook the onions on low heat for 35–40 minutes, stirring often, until deep brown.","Sprinkle in the flour, stir for 1 minute, then pour in the wine and scrape the bottom of the pot.","Add the water, stock cubes and thyme. Simmer for 15 minutes and season.","Toast the bread slices.","Ladle the soup into ovenproof bowls, float the toast on top and pile on the gruyère.","Put under a hot grill for 3–5 minutes until the cheese bubbles and browns."],
+  tip:"Don't rush the onions. A pinch of sugar helps them brown if they are slow to colour." },
+
+{ id:"veloute-poireaux", fr:"Velouté de poireaux et pommes de terre", en:"Leek and potato soup", reg:"Nord", type:"Starter", t:35, d:1, serves:4,
+  ing:"leeks:3; potatoes:3 medium; butter:30 g; stock cubes:1, chicken or vegetable; water:1 l; salt:to taste; pepper:to taste",
+  opt:"crème fraîche:2 tbsp; chives:1 tbsp, chopped",
+  steps:["Wash the leeks well and slice the white and light green parts.","Peel the potatoes and cut them into cubes.","Cook the leeks gently in the butter for 5 minutes without letting them brown.","Add the potatoes, water and stock cube and simmer for 20 minutes.","Blend until smooth and season.","Serve with a swirl of crème fraîche and some chives."],
+  tip:"Serve it chilled with extra cream and you have a vichyssoise." },
+
+{ id:"potage-parmentier", fr:"Potage Parmentier", en:"Creamy potato soup", reg:"Île-de-France", type:"Starter", t:35, d:1, serves:4,
+  ing:"potatoes:600 g; onions:1; butter:30 g; milk:300 ml; water:700 ml; salt:to taste; pepper:to taste",
+  opt:"chives:1 tbsp, chopped; crème fraîche:2 tbsp; bread/baguette:2 slices, for croutons",
+  steps:["Chop the onion and cook it gently in the butter for 5 minutes.","Peel and dice the potatoes and add them with the water and a good pinch of salt.","Simmer for 20 minutes until the potatoes are very soft.","Pour in the milk and heat through without boiling.","Blend until smooth and season with pepper.","Serve with croutons, chives or a spoonful of crème fraîche."],
+  tip:"Named after Antoine Parmentier, who convinced the French to eat potatoes in the 1700s." },
+
+{ id:"ratatouille", fr:"Ratatouille", en:"Provençal vegetable stew", reg:"Provence", type:"Main", t:75, d:2, serves:4,
+  ing:"zucchini:2; eggplant:1; bell peppers:2; tomatoes:4; onions:1; garlic:3 cloves; olive oil:6 tbsp; herbes de Provence:1 tsp; salt:to taste; pepper:to taste",
+  opt:"basil:a few leaves; bay leaf:1",
+  steps:["Cut each vegetable into 2 cm pieces and keep them separate.","Fry the eggplant in 2 tbsp olive oil until golden, then set aside.","Do the same with the zucchini, then the peppers.","In the same pot, soften the onion and garlic in the remaining oil, then add the chopped tomatoes and herbs and cook for 10 minutes.","Return all the vegetables to the pot and stir gently.","Cover and simmer on low heat for 30 minutes.","Season and let it rest. It tastes even better the next day."],
+  tip:"Cooking each vegetable separately keeps them from turning into mush." },
+
+{ id:"gratin-dauphinois", fr:"Gratin dauphinois", en:"Potatoes baked in cream", reg:"Dauphiné", type:"Side", t:90, d:2, serves:6,
+  ing:"potatoes:1 kg; heavy cream:300 ml; milk:300 ml; garlic:1 clove; butter:20 g; nutmeg:a pinch; salt:1 tsp; pepper:to taste",
+  steps:["Heat the oven to 160 °C.","Rub a baking dish with the cut garlic clove, then butter it.","Peel and slice the potatoes 3 mm thick. Don't rinse them.","Warm the milk and cream with salt, pepper and nutmeg, add the potatoes and simmer for 10 minutes, stirring gently.","Pour everything into the dish and smooth the top.","Bake for about 1 hour, until golden and a knife slides through easily.","Let it rest for 10 minutes before serving."],
+  tip:"A real dauphinois has no cheese. The starch left on unrinsed potatoes is what thickens the cream." },
+
+{ id:"sarladaises", fr:"Pommes de terre sarladaises", en:"Garlic and parsley sautéed potatoes", reg:"Périgord", type:"Side", t:40, d:1, serves:4,
+  ing:"potatoes:800 g; butter:40 g; garlic:3 cloves; parsley:a handful; salt:to taste; pepper:to taste",
+  steps:["Peel the potatoes, slice them 4 mm thick and pat dry with a cloth.","Heat the butter in a large frying pan.","Add the potatoes and cook over medium heat for 10 minutes, turning them, then cover for 10 minutes.","Uncover, turn the heat up and cook another 10 minutes until crisp.","Finely chop the garlic and parsley.","Add them for the last 2 minutes, season and serve."],
+  tip:"In Périgord they use duck fat instead of butter. If you ever have some, try it." },
+
+{ id:"haricots-ail", fr:"Haricots verts à l'ail", en:"Garlic green beans", reg:"Partout en France", type:"Side", t:15, d:1, serves:4,
+  ing:"green beans:400 g; garlic:2 cloves; butter:25 g; parsley:1 tbsp, chopped; salt:to taste; pepper:to taste",
+  steps:["Trim the ends of the beans.","Boil them in well-salted water for 5–6 minutes.","Drain and plunge them into cold water to keep them bright green.","Melt the butter and cook the sliced garlic for 1 minute without browning.","Toss the beans in the butter for 2–3 minutes.","Add the parsley, season and serve."],
+  tip:"Salt the cooking water like the sea. It's the only chance to season the inside of the beans." },
+
+{ id:"poulet-roti", fr:"Poulet rôti", en:"Roast chicken", reg:"Bresse", type:"Main", t:90, d:1, serves:4,
+  ing:"chicken:1 whole, about 1.5 kg; butter:50 g, soft; garlic:1 head; thyme:4 sprigs; lemon:1; salt:to taste; pepper:to taste",
+  opt:"potatoes:600 g; white wine:1 glass",
+  steps:["Take the chicken out of the fridge 30 minutes ahead and heat the oven to 210 °C.","Rub the butter all over and under the skin and season generously.","Put the halved lemon, thyme and a few garlic cloves inside the chicken.","Put it in a roasting dish with the rest of the garlic, the potatoes if using, and a glass of water or wine.","Roast for about 1 hour 15 minutes, spooning the juices over every 20 minutes.","Check it's done: the juices from the thigh should run clear.","Rest for 10 minutes under foil, then carve and pour the juices over."],
+  tip:"Rest it upside down so the juices run into the breast meat." },
+
+{ id:"poulet-creme", fr:"Poulet à la crème et aux champignons", en:"Chicken with cream and mushrooms", reg:"Normandie", type:"Main", t:40, d:1, serves:4,
+  ing:"chicken:4 thighs or breasts; mushrooms:300 g; crème fraîche:200 g; shallots:2; white wine:100 ml; butter:30 g; salt:to taste; pepper:to taste",
+  opt:"parsley:1 tbsp, chopped; tarragon:1 tsp, chopped",
+  steps:["Season the chicken and brown it in the butter for 5 minutes on each side, then set aside.","In the same pan, cook the sliced mushrooms and chopped shallots for 5 minutes.","Pour in the wine and scrape up the bits stuck to the pan.","Put the chicken back, cover and cook for 15 minutes.","Stir in the crème fraîche and simmer for 5 minutes until the sauce coats a spoon.","Season, add the herbs and serve with rice or pasta."],
+  tip:"Swap the wine for a splash of cider (or calvados) for a true Normandy version." },
+
+{ id:"coq-au-vin", fr:"Coq au vin", en:"Chicken braised in red wine", reg:"Bourgogne", type:"Main", t:150, d:3, serves:6,
+  ing:"chicken:1.5 kg, thighs and legs; red wine:1 bottle (75 cl); lardons/bacon:150 g; mushrooms:250 g; onions:2; carrots:2; garlic:3 cloves; flour:2 tbsp; butter:30 g; thyme:3 sprigs; bay leaf:2; salt:to taste; pepper:to taste",
+  opt:"parsley:1 tbsp, chopped",
+  steps:["Brown the lardons in a large casserole, then remove them.","Brown the chicken pieces in the fat with the butter, in batches, then set aside.","Soften the chopped onions, carrots and garlic for 5 minutes.","Sprinkle in the flour, stir for 1 minute, then pour in the wine and scrape the bottom.","Return the chicken and lardons, add the thyme and bay leaves, cover and simmer gently for 1 hour 30 minutes.","Fry the mushrooms in a little butter and add them for the last 15 minutes.","If the sauce is thin, simmer uncovered to reduce. Season and add parsley."],
+  tip:"Even better reheated the next day. If you have time, marinate the chicken in the wine overnight." },
+
+{ id:"boeuf-bourguignon", fr:"Bœuf bourguignon", en:"Beef stewed in red wine", reg:"Bourgogne", type:"Main", t:210, d:3, serves:6,
+  ing:"beef (stewing):1.2 kg; red wine:1 bottle (75 cl); lardons/bacon:150 g; carrots:3; onions:2; mushrooms:250 g; garlic:2 cloves; flour:2 tbsp; stock cubes:1, beef; butter:30 g; thyme:3 sprigs; bay leaf:2; salt:to taste; pepper:to taste",
+  opt:"parsley:1 tbsp, chopped",
+  steps:["Cut the beef into large cubes and pat dry.","Brown the lardons in a casserole and remove. Brown the beef in batches in the fat with the butter.","Soften the onions, sliced carrots and garlic for 5 minutes.","Return the beef, sprinkle over the flour and stir for 2 minutes.","Pour in the wine, add the stock cube, enough water to just cover, and the herbs.","Cover and simmer very gently for 2 hours 30 minutes to 3 hours.","Fry the mushrooms in butter and add them with the lardons 20 minutes before the end.","The sauce should coat a spoon. Season and serve with boiled potatoes or pasta."],
+  tip:"Cook with a wine you would drink. Cheap, sour wine makes a sour sauce." },
+
+{ id:"blanquette", fr:"Blanquette de poulet", en:"Chicken in creamy white sauce", reg:"Île-de-France", type:"Main", t:75, d:2, serves:4,
+  ing:"chicken:1 kg, boneless thighs; carrots:3; onions:1; mushrooms:250 g; stock cubes:1; water:1 l; butter:40 g; flour:40 g; heavy cream:150 ml; eggs:1 yolk; lemon:½; salt:to taste; pepper:to taste",
+  opt:"bay leaf:1; thyme:2 sprigs",
+  steps:["Put the chicken pieces, sliced carrots, quartered onion, stock cube and herbs in a pot, cover with the water and simmer for 40 minutes, skimming off any foam.","Meanwhile, cook the mushrooms in a little butter.","Strain, keeping 600 ml of the broth. Keep the chicken and carrots warm.","Melt the butter, stir in the flour for 2 minutes, then whisk in the broth and simmer for 5 minutes.","Off the heat, whisk the yolk with the cream and lemon juice, then stir into the sauce. Don't let it boil.","Add the chicken, carrots and mushrooms, season and serve with rice."],
+  tip:"The classic is made with veal shoulder: cook it for 1 hour 30 instead of 40 minutes." },
+
+{ id:"hachis-parmentier", fr:"Hachis Parmentier", en:"French cottage pie", reg:"Partout en France", type:"Main", t:60, d:1, serves:4,
+  ing:"ground beef:500 g; potatoes:1 kg; onions:2; garlic:2 cloves; milk:150 ml; butter:50 g; salt:to taste; pepper:to taste",
+  opt:"gruyère:60 g, grated; nutmeg:a pinch; parsley:1 tbsp, chopped",
+  steps:["Peel the potatoes and boil them in salted water for 20 minutes.","Fry the chopped onions and garlic, add the beef and brown for 8 minutes. Season.","Heat the oven to 200 °C.","Mash the potatoes with the butter and warm milk. Season with salt, pepper and nutmeg.","Spread the beef in a baking dish and cover with the mash. Make ridges with a fork.","Sprinkle with gruyère and bake for 20 minutes until golden."],
+  tip:"French families make it with leftover pot-au-feu beef. That's the original." },
+
+{ id:"steak-frites", fr:"Steak frites", en:"Steak and fries", reg:"Paris", type:"Main", t:45, d:2, serves:2,
+  ing:"beef steak:2, about 200 g each; potatoes:600 g, floury; vegetable oil:about 1 l, for frying; butter:20 g; salt:to taste; pepper:to taste",
+  opt:"shallots:1; Dijon mustard:to serve; parsley:1 tbsp, chopped",
+  steps:["Cut the potatoes into 1 cm sticks, rinse them and dry them very well.","Heat the oil to 150 °C and fry the potatoes for 6–7 minutes until soft but not coloured. Drain.","Take the steaks out of the fridge and pat them dry.","Heat the oil to 180 °C and fry the potatoes again for 2–3 minutes until golden. Salt them.","Sear the steaks in a very hot pan with a little oil, 2–3 minutes per side. Add the butter for the last minute and spoon it over.","Rest the steaks for 3 minutes, then serve with the fries and mustard."],
+  tip:"Frying twice is the secret to fries that are crisp outside and fluffy inside. Never fill a pan more than a third with oil." },
+
+{ id:"moules-marinieres", fr:"Moules marinières", en:"Mussels in white wine", reg:"Bretagne", type:"Main", t:25, d:1, serves:2,
+  ing:"mussels:1.5 kg; white wine:200 ml; shallots:3; garlic:1 clove; butter:30 g; parsley:a handful; pepper:to taste",
+  opt:"crème fraîche:2 tbsp; bread/baguette:to serve",
+  steps:["Rinse the mussels and pull off the beards. Throw away any open ones that don't close when tapped.","Soften the chopped shallots and garlic in the butter for 3 minutes.","Add the wine and boil for 1 minute.","Add the mussels, cover and cook on high heat for 4–5 minutes, shaking the pot, until they open.","Throw away any that stay closed.","Stir in the parsley (and crème fraîche) and serve with bread or fries."],
+  tip:"Don't add salt: the mussels release plenty. With fries, it becomes the famous moules-frites." },
+
+{ id:"saumon-papillote", fr:"Saumon en papillote", en:"Salmon baked in paper", reg:"Partout en France", type:"Main", t:25, d:1, serves:2,
+  ing:"salmon:2 fillets; lemon:1; olive oil:2 tbsp; salt:to taste; pepper:to taste",
+  opt:"zucchini:1; chives:1 tbsp, chopped; white wine:2 tbsp; tomatoes:1",
+  steps:["Heat the oven to 200 °C.","Cut two large sheets of baking paper.","If using zucchini, slice it into thin ribbons and lay them in the middle of each sheet.","Put a salmon fillet on top, season, add lemon slices and drizzle with oil.","Fold the paper over and pleat the edges to seal tightly.","Bake for 12–15 minutes.","Open the parcels at the table and add the chives."],
+  tip:"Seal the edges well: the steam trapped inside is what cooks the fish." },
+
+{ id:"sole-meuniere", fr:"Sole meunière", en:"Fish in brown butter and lemon", reg:"Normandie", type:"Main", t:20, d:2, serves:2,
+  ing:"white fish:2 fillets, sole, plaice or cod; flour:3 tbsp; butter:60 g; lemon:1; parsley:1 tbsp, chopped; salt:to taste; pepper:to taste",
+  steps:["Pat the fish dry and season it.","Dip it in the flour and shake off the excess.","Heat 20 g butter until it foams and cook the fish for 2–3 minutes per side.","Move it to warm plates.","Wipe the pan, add the rest of the butter and cook until it turns nutty brown.","Off the heat, add the lemon juice and parsley, then pour over the fish."],
+  tip:"Watch the butter closely: it goes from golden to burnt in seconds. When it smells like hazelnuts, it's ready." },
+
+{ id:"brandade", fr:"Brandade de morue", en:"Whipped cod and potato", reg:"Languedoc", type:"Main", t:50, d:2, serves:4,
+  ing:"white fish:500 g, cod; potatoes:400 g; garlic:3 cloves; olive oil:100 ml; milk:200 ml; salt:to taste; pepper:to taste",
+  opt:"breadcrumbs:2 tbsp; parsley:1 tbsp, chopped; bread/baguette:to serve",
+  steps:["Peel and boil the potatoes until tender.","Poach the fish gently in the milk for 8 minutes.","Warm the olive oil with the crushed garlic.","Flake the fish, keeping the milk.","Mash the potatoes, beat in the fish, then the garlic oil and enough milk to make it creamy. Season.","Serve as is, or sprinkle with breadcrumbs and bake at 200 °C for 10 minutes."],
+  tip:"The Nîmes original uses salt cod soaked for 24 hours. Fresh cod is quicker and still delicious." },
+
+{ id:"croque-saumon", fr:"Croque au saumon", en:"Toasted smoked salmon sandwich", reg:"Partout en France", type:"Breakfast & snack", t:15, d:1, serves:2,
+  ing:"bread/baguette:4 slices of sandwich bread; smoked salmon:4 slices; crème fraîche:3 tbsp; lemon:½; butter:20 g; pepper:to taste",
+  opt:"chives:1 tbsp, chopped; emmental:50 g, grated",
+  steps:["Mix the crème fraîche with grated lemon zest, a squeeze of juice, pepper and chives.","Spread it on two slices of bread.","Add the smoked salmon (and emmental), then close the sandwiches.","Butter the outsides.","Toast in a pan over medium heat for 3 minutes per side, pressing down.","Cut diagonally and serve."],
+  tip:"Keep the heat medium so the bread browns while the inside warms through." },
+
+{ id:"lentilles-lardons", fr:"Lentilles aux lardons", en:"Lentils with bacon", reg:"Auvergne", type:"Main", t:45, d:1, serves:4,
+  ing:"dried lentils:300 g, green; lardons/bacon:200 g; onions:1; carrots:2; bay leaf:1; thyme:2 sprigs; stock cubes:1; water:1 l; salt:to taste; pepper:to taste",
+  opt:"Dijon mustard:1 tbsp; parsley:1 tbsp, chopped; sausage:2",
+  steps:["Rinse the lentils.","Brown the lardons in a pot, then add the diced onion and carrots and cook for 5 minutes.","Add the lentils, herbs, water and stock cube.","Simmer for 25 minutes until tender but not mushy.","Add salt only at the end.","Drain any extra liquid and stir in the mustard if you like."],
+  tip:"Salting at the start makes lentil skins tough. Puy lentils keep their shape best." },
+
+{ id:"cassoulet", fr:"Cassoulet (simplifié)", en:"Easy bean, duck and sausage bake", reg:"Languedoc", type:"Main", t:120, d:2, serves:6,
+  ing:"canned white beans:3 cans (400 g each); duck:2 legs, confit if possible; sausage:4, Toulouse-style; lardons/bacon:150 g; onions:1; garlic:3 cloves; canned tomatoes:1 can; stock cubes:1; water:400 ml; thyme:2 sprigs; bay leaf:2; salt:to taste; pepper:to taste",
+  opt:"breadcrumbs:3 tbsp",
+  steps:["Heat the oven to 160 °C.","Brown the duck legs skin side down in a casserole for 10 minutes, then remove. Brown the sausages and lardons in the fat.","Soften the chopped onion and garlic.","Add the tomatoes, drained beans, water, stock cube and herbs.","Push the meats into the beans and sprinkle the breadcrumbs on top.","Bake uncovered for 1 hour 30 minutes, pushing the crust down into the beans two or three times.","Rest for 15 minutes before serving."],
+  tip:"In Castelnaudary they say the crust should be broken seven times. Twice is fine on a weeknight." },
+
+{ id:"tartiflette", fr:"Tartiflette", en:"Potato, bacon and reblochon bake", reg:"Savoie", type:"Main", t:60, d:2, serves:4,
+  ing:"potatoes:1 kg; reblochon:1 whole (about 450 g); lardons/bacon:200 g; onions:2; white wine:100 ml; pepper:to taste",
+  opt:"crème fraîche:2 tbsp; garlic:1 clove; brie/camembert:instead of reblochon",
+  steps:["Boil the potatoes in their skins for 20 minutes, then peel and slice.","Fry the lardons and sliced onions until golden, then add the wine.","Heat the oven to 200 °C and rub a baking dish with the cut garlic.","Layer the potatoes and the lardon mixture (with crème fraîche if using).","Cut the reblochon in half horizontally and lay it on top, rind side up.","Bake for 20–25 minutes until runny and golden."],
+  tip:"No reblochon? Brie, camembert or raclette cheese all work well." },
+
+{ id:"raclette-potatoes", fr:"Pommes de terre façon raclette", en:"Raclette-style potatoes", reg:"Savoie", type:"Main", t:35, d:1, serves:2,
+  ing:"potatoes:600 g, small; raclette cheese:300 g; ham:4 slices; pepper:to taste",
+  opt:"cornichons:to serve; onions:1, thinly sliced",
+  steps:["Boil the potatoes in their skins for 15–20 minutes.","Heat the oven grill to 220 °C.","Cut the potatoes in half and put them in a baking dish with the ham folded between them.","Cover with slices of raclette cheese.","Grill for 5–8 minutes until bubbling.","Serve with black pepper and cornichons."],
+  tip:"No raclette machine needed. Leave the skins on: that's how the Savoyards eat them." },
+
+{ id:"carbonara-fr", fr:"Pâtes à la carbonara française", en:"French-style carbonara", reg:"Partout en France", type:"Main", t:20, d:1, serves:2,
+  ing:"pasta:200 g; lardons/bacon:150 g; crème fraîche:150 g; onions:1; eggs:1 yolk; salt:to taste; pepper:to taste",
+  opt:"parmesan:30 g, grated",
+  steps:["Bring a pot of salted water to the boil and cook the pasta.","Fry the lardons and chopped onion until golden.","Stir in the crème fraîche and warm for 1 minute.","Drain the pasta, keeping a ladle of the cooking water.","Off the heat, toss the pasta with the sauce, the yolk and a splash of the water.","Season with lots of black pepper and add parmesan."],
+  tip:"This is the French home version. Italians would be horrified by the cream, but it's a comfort classic here." },
+
+{ id:"crepes", fr:"Crêpes", en:"Thin pancakes", reg:"Bretagne", type:"Dessert", t:40, d:1, serves:4, makes:"about 12 crêpes",
+  ing:"flour:250 g; eggs:3; milk:500 ml; sugar:1 tbsp; butter:30 g, melted, plus extra for the pan; salt:a pinch",
+  opt:"honey:to serve; berries:to serve; chocolate:to serve; lemon:to serve",
+  steps:["Mix the flour, sugar and salt in a bowl and make a hole in the middle.","Crack the eggs into the hole and whisk, adding the milk little by little to avoid lumps.","Stir in the melted butter.","Let the batter rest for 30 minutes.","Heat a buttered pan, pour in a small ladle of batter and swirl to cover the base thinly.","Cook for 1 minute, flip and cook for 30 seconds more.","Fill with sugar and lemon, chocolate, honey or berries."],
+  tip:"The first crêpe always fails. In France it's the cook's snack." },
+
+{ id:"galettes", fr:"Galettes bretonnes complètes", en:"Buckwheat crêpes with ham, egg and cheese", reg:"Bretagne", type:"Main", t:30, d:2, serves:4, rest:"+ 1 h resting",
+  ing:"buckwheat flour:250 g; water:500 ml; salt:1 tsp; eggs:5; ham:4 slices; emmental:150 g, grated; butter:40 g",
+  opt:"mushrooms:150 g, sliced and fried; crème fraîche:2 tbsp",
+  steps:["Whisk the buckwheat flour, salt and 1 egg, adding the water little by little, until smooth. Rest for at least 1 hour (overnight is best).","Heat a large pan and butter it.","Pour in a ladle of batter, spread it thin and cook for 2 minutes.","When it sets, crack an egg into the middle and spread the white around.","Add the emmental and ham.","When the white is set, fold the edges in to make a square, leaving the yolk showing.","Serve with a bowl of cider."],
+  tip:"Buckwheat galettes are savoury; wheat crêpes are for dessert. Bretons take the difference seriously." },
+
+{ id:"pain-perdu", fr:"Pain perdu", en:"French toast", reg:"Partout en France", type:"Breakfast & snack", t:15, d:1, serves:2,
+  ing:"bread/baguette:4 thick slices, stale; eggs:2; milk:200 ml; sugar:2 tbsp; butter:20 g",
+  opt:"cinnamon:a pinch; vanilla:a few drops; berries:to serve; honey:to serve",
+  steps:["Whisk the eggs, milk and sugar (with cinnamon or vanilla).","Soak each slice of bread for about 30 seconds per side.","Melt the butter in a pan over medium heat.","Fry the bread for 2–3 minutes per side until golden.","Sprinkle with a little sugar and serve warm with berries or honey."],
+  tip:"'Lost bread' was made to rescue stale bread. Fresh bread falls apart, so yesterday's is better." },
+
+{ id:"mousse-chocolat", fr:"Mousse au chocolat", en:"Chocolate mousse", reg:"Paris", type:"Dessert", t:20, d:2, serves:6, rest:"+ 3 h chilling",
+  ing:"chocolate:200 g, dark; eggs:6; sugar:30 g; salt:a pinch",
+  steps:["Melt the chocolate in a bowl over simmering water and let it cool slightly.","Separate the eggs.","Stir the yolks into the chocolate one at a time.","Whisk the whites with the salt to soft peaks, add the sugar and whisk until firm and glossy.","Stir a third of the whites into the chocolate to loosen it, then gently fold in the rest.","Spoon into glasses and chill for at least 3 hours."],
+  tip:"The eggs stay raw, so use very fresh ones and keep the mousse in the fridge." },
+
+{ id:"creme-brulee", fr:"Crème brûlée", en:"Burnt cream custard", reg:"Paris", type:"Dessert", t:60, d:2, serves:4, rest:"+ 2 h chilling",
+  ing:"heavy cream:500 ml; eggs:5 yolks; sugar:80 g, plus 4 tbsp for the top",
+  opt:"vanilla:1 pod or 1 tsp extract",
+  steps:["Heat the oven to 100 °C.","Warm the cream (with the vanilla) until just steaming.","Whisk the yolks and sugar until pale but not foamy.","Slowly pour in the warm cream, whisking.","Skim off any foam and pour into 4 shallow ramekins.","Bake for 45–50 minutes until set with a slight wobble in the middle.","Chill for 2 hours, then sprinkle with sugar and caramelise under a very hot grill or with a torch."],
+  tip:"Keep the leftover whites: they make meringues or a batch of financiers." },
+
+{ id:"clafoutis", fr:"Clafoutis aux cerises", en:"Cherry batter pudding", reg:"Limousin", type:"Dessert", t:50, d:1, serves:6,
+  ing:"cherries:500 g; eggs:3; flour:80 g; sugar:80 g; milk:250 ml; butter:20 g; salt:a pinch",
+  opt:"vanilla:a few drops; heavy cream:50 ml",
+  steps:["Heat the oven to 180 °C. Butter a baking dish and sprinkle it with a little sugar.","Spread the cherries in the dish (in Limousin they keep the stones in).","Whisk the eggs and sugar, then the flour and salt, then the milk.","Pour the batter over the cherries.","Bake for 35–40 minutes until puffed and golden.","Serve lukewarm."],
+  tip:"The stones give a light almond flavour. Made with pears or apples, it's called a flaugnarde." },
+
+{ id:"tarte-tatin", fr:"Tarte Tatin", en:"Upside-down caramel apple tart", reg:"Centre-Val de Loire", type:"Dessert", t:90, d:3, serves:6,
+  ing:"apples:6, firm; butter:150 g; sugar:150 g; flour:200 g; water:4 tbsp, cold; salt:a pinch",
+  steps:["Make the pastry: rub the flour, salt and 100 g butter together, add the cold water and chill for 30 minutes.","Peel the apples and cut them into quarters.","Heat the oven to 190 °C.","In an ovenproof pan, melt 50 g butter with the sugar and cook to an amber caramel.","Pack the apples in tightly, rounded side down, and cook on the hob for 10 minutes.","Roll out the pastry, lay it over the apples, tuck in the edges and prick it.","Bake for 35–40 minutes.","Rest for 5 minutes, then put a plate on top and flip it over in one quick move."],
+  tip:"Serve with crème fraîche. The tang balances the caramel." },
+
+{ id:"far-breton", fr:"Far breton", en:"Breton prune custard cake", reg:"Bretagne", type:"Dessert", t:60, d:1, serves:8,
+  ing:"flour:125 g; eggs:4; milk:750 ml; sugar:125 g; butter:30 g; prunes:200 g; salt:a pinch",
+  opt:"vanilla:a few drops",
+  steps:["Heat the oven to 200 °C and butter a baking dish.","Whisk the flour, sugar, salt and eggs together.","Gradually whisk in the milk until smooth.","Scatter the prunes in the dish and pour over the batter.","Bake for 10 minutes at 200 °C, then 40 minutes at 180 °C.","Let it cool before slicing."],
+  tip:"If you can, rest the batter overnight in the fridge. The texture gets silkier." },
+
+{ id:"madeleines", fr:"Madeleines", en:"Small shell-shaped sponge cakes", reg:"Lorraine", type:"Breakfast & snack", t:30, d:2, serves:6, makes:"about 24 madeleines", rest:"+ 1 h resting",
+  ing:"flour:125 g; eggs:3; sugar:125 g; butter:125 g, melted; baking powder:1 tsp; salt:a pinch",
+  opt:"lemon:zest of 1; honey:1 tbsp",
+  steps:["Whisk the eggs and sugar for 3 minutes until pale and thick.","Fold in the flour, baking powder and salt.","Stir in the cooled melted butter (and zest or honey).","Chill the batter for at least 1 hour.","Heat the oven to 220 °C. Butter and flour the moulds.","Fill each mould three-quarters full. Bake 5 minutes at 220 °C, then 5 minutes at 180 °C, until the bump rises.","Unmould straight away."],
+  tip:"The bump comes from cold batter meeting a hot oven. You need a madeleine tray; a mini muffin tin works too." },
+
+{ id:"creme-caramel", fr:"Crème caramel", en:"Caramel custard", reg:"Partout en France", type:"Dessert", t:60, d:2, serves:6, rest:"+ 3 h chilling",
+  ing:"milk:500 ml; eggs:4; sugar:200 g (100 g for the caramel); water:2 tbsp",
+  opt:"vanilla:1 pod or 1 tsp extract",
+  steps:["Cook 100 g sugar with the water, without stirring, to an amber caramel. Pour into 6 ramekins.","Heat the oven to 150 °C.","Warm the milk (with vanilla).","Whisk the eggs with the remaining sugar and pour in the warm milk.","Strain into the ramekins.","Put them in a dish of hot water and bake for 40 minutes until set.","Cool, chill for 3 hours, then run a knife around the edge and turn out."],
+  tip:"Swirl the pan instead of stirring the caramel, or it may crystallise." },
+
+{ id:"fondant", fr:"Fondant au chocolat", en:"Molten chocolate cake", reg:"Partout en France", type:"Dessert", t:25, d:2, serves:4,
+  ing:"chocolate:200 g, dark; butter:100 g; eggs:3; sugar:80 g; flour:30 g",
+  steps:["Heat the oven to 200 °C. Butter and flour 4 ramekins.","Melt the chocolate and butter together.","Whisk the eggs and sugar.","Combine with the chocolate, then fold in the flour.","Fill the ramekins (you can chill them now until needed).","Bake for 8–10 minutes: the centre should still wobble.","Rest for 1 minute, then turn out onto plates."],
+  tip:"Baking straight from the fridge? Add 2 minutes." },
+
+{ id:"soupe-pistou", fr:"Soupe au pistou", en:"Provençal vegetable soup with basil", reg:"Provence", type:"Main", t:60, d:2, serves:6,
+  ing:"zucchini:2; green beans:200 g; potatoes:2; carrots:2; canned white beans:1 can; pasta:80 g, small; garlic:3 cloves; basil:a large bunch; olive oil:5 tbsp; parmesan:50 g, grated; water:2 l; salt:to taste; pepper:to taste",
+  opt:"tomatoes:2; leeks:1",
+  steps:["Dice all the vegetables small.","Simmer the carrots and potatoes in salted water for 15 minutes.","Add the zucchini and green beans and cook for 10 minutes.","Add the drained white beans and pasta and cook for 10 more minutes.","Make the pistou: crush the garlic with salt, add the basil and pound or blend, then stir in the oil and parmesan.","Take the soup off the heat and stir in the pistou, or let everyone add their own at the table."],
+  tip:"Never boil the pistou. Heat turns the basil dark and bitter." },
+
+{ id:"pot-au-feu", fr:"Pot-au-feu", en:"Boiled beef and vegetables", reg:"Île-de-France", type:"Main", t:210, d:2, serves:6,
+  ing:"beef (stewing):1.5 kg, mixed cuts; carrots:6; leeks:3; potatoes:6; onions:1; celery:2 sticks; bay leaf:2; thyme:3 sprigs; salt:to taste; pepper:a few peppercorns",
+  opt:"Dijon mustard:to serve; cornichons:to serve",
+  steps:["Put the beef in a large pot, cover with cold water, bring to the boil and skim.","Add the onion, celery, herbs, peppercorns and salt. Simmer very gently for 2 hours 30, skimming now and then.","Add the carrots and tied leeks for the last 45 minutes.","Cook the potatoes separately in a little of the broth for 25 minutes.","Serve the broth first as a soup.","Then serve the meat and vegetables with mustard, cornichons and coarse salt."],
+  tip:"Keep the broth barely bubbling. Boiling hard makes the meat stringy and the broth cloudy." },
+
+{ id:"endives-jambon", fr:"Endives au jambon", en:"Endives wrapped in ham with cheese sauce", reg:"Nord", type:"Main", t:60, d:2, serves:4,
+  ing:"endives:8; ham:8 slices; butter:50 g; flour:40 g; milk:500 ml; gruyère:100 g, grated; salt:to taste; pepper:to taste",
+  opt:"nutmeg:a pinch; sugar:a pinch",
+  steps:["Cut out the bitter cone at the base of each endive.","Cook them in a pan with 10 g butter and a splash of water, covered, for 20 minutes until tender.","Drain well, squeezing out the water.","Heat the oven to 200 °C and make a béchamel with the rest of the butter, the flour and the milk. Season.","Roll each endive in a slice of ham and lay them in a baking dish.","Pour over the béchamel and cover with gruyère.","Bake for 20–25 minutes until golden."],
+  tip:"Squeeze the endives well or the sauce turns watery. A pinch of sugar while braising softens the bitterness." },
+
+{ id:"carbonnade", fr:"Carbonnade flamande", en:"Flemish beef and beer stew", reg:"Nord", type:"Main", t:180, d:2, serves:6,
+  ing:"beef (stewing):1.2 kg; onions:4; beer:75 cl, brown; bread/baguette:2 slices; Dijon mustard:2 tbsp; sugar:1 tbsp, brown if possible; butter:40 g; flour:2 tbsp; thyme:3 sprigs; bay leaf:2; vinegar:1 tbsp; salt:to taste; pepper:to taste",
+  steps:["Cut the beef into cubes, pat dry and brown it in the butter in batches.","Cook the sliced onions in the same pot for 10 minutes until golden, then sprinkle with the sugar and flour.","Return the beef and pour in the beer. Add the herbs.","Spread the mustard thickly on the bread and lay it on top, mustard side down.","Cover and simmer on low heat for 2 hours 30, stirring now and then. The bread melts into the sauce.","Add the vinegar at the end, season and serve with fries."],
+  tip:"In Lille and across Flanders, they use slices of pain d'épices (spiced gingerbread) instead of bread." },
+
+{ id:"belle-helene", fr:"Poires Belle-Hélène", en:"Poached pears with hot chocolate sauce", reg:"Paris", type:"Dessert", t:40, d:1, serves:4,
+  ing:"pears:4; sugar:150 g; water:1 l; chocolate:150 g, dark; heavy cream:100 ml",
+  opt:"vanilla:1 pod or 1 tsp extract; lemon:½",
+  steps:["Bring the water and sugar (with vanilla) to a simmer.","Peel the pears, keeping the stalks, and rub with lemon.","Poach them for 20–25 minutes until a knife slides in easily.","Let them cool in the syrup.","Heat the cream and pour it over the chopped chocolate. Stir until smooth.","Serve the pears with the hot chocolate sauce (and vanilla ice cream if you have it)."],
+  tip:"Slightly underripe pears hold their shape best when poached." },
+
+{ id:"pissaladiere", fr:"Pissaladière", en:"Niçoise onion tart", reg:"Provence", type:"Starter", t:90, d:2, serves:6,
+  ing:"flour:250 g; yeast:5 g, dried; water:150 ml, warm; olive oil:5 tbsp; onions:1 kg; olives:15, black; thyme:2 sprigs; salt:1 tsp",
+  opt:"anchovies:12 fillets; bay leaf:1",
+  steps:["Mix the flour, yeast, salt, water and 2 tbsp oil. Knead for 5 minutes, then leave to rise for 1 hour.","Slice the onions and cook them slowly in 3 tbsp oil with the thyme, covered, for 40 minutes until soft and sweet but not brown.","Heat the oven to 220 °C.","Roll the dough into a rectangle on a baking tray.","Spread the onions over it, lay the anchovies in a criss-cross pattern and dot with olives.","Bake for 20 minutes."],
+  tip:"Good cold too, cut into squares for an apéritif." },
+
+{ id:"chevre-chaud", fr:"Salade de chèvre chaud", en:"Warm goat cheese salad", reg:"Centre-Val de Loire", type:"Starter", t:15, d:1, serves:2,
+  ing:"goat cheese:1 log (or 4 small rounds); bread/baguette:8 slices; lettuce:1 small head; honey:2 tsp; olive oil:3 tbsp; vinegar:1 tbsp; Dijon mustard:1 tsp; salt:a pinch; pepper:to taste",
+  opt:"walnuts:a handful; thyme:a few leaves; roquefort:40 g, crumbled",
+  steps:["Heat the oven grill to 220 °C.","Put the baguette slices on a tray, add a round of goat cheese to each and drizzle with honey (and thyme).","Grill for 5–6 minutes until the cheese is soft and golden.","Whisk the mustard, vinegar, oil, salt and pepper.","Toss the lettuce with the dressing and the walnuts.","Top with the warm toasts and serve right away."],
+  tip:"A log of goat cheese is easiest to slice when it's cold from the fridge." },
+
+{ id:"gougeres", fr:"Gougères", en:"Cheese puffs", reg:"Bourgogne", type:"Breakfast & snack", t:45, d:2, serves:6, makes:"about 25 puffs",
+  ing:"water:125 ml; butter:50 g; flour:75 g; eggs:2; comté:80 g, grated; salt:a pinch",
+  opt:"nutmeg:a pinch; pepper:to taste",
+  steps:["Heat the oven to 200 °C and line a tray with baking paper.","Bring the water, butter and salt to the boil.","Take it off the heat, tip in all the flour and beat. Put back on the heat for 1–2 minutes until the dough dries out and pulls away from the pan.","Let it cool for 2 minutes, then beat in the eggs one at a time until glossy.","Stir in most of the comté.","Spoon or pipe walnut-sized balls onto the tray and top with the rest of the cheese.","Bake for 20–25 minutes. Don't open the oven for the first 15."],
+  tip:"Gruyère works just as well as comté. In Burgundy they're served with a glass of white wine." },
+
+{ id:"oeufs-mimosa", fr:"Œufs mimosa", en:"French deviled eggs", reg:"Partout en France", type:"Starter", t:25, d:1, serves:4,
+  ing:"eggs:7 (6 to boil, 1 yolk for the mayonnaise); Dijon mustard:1 tsp; olive oil:100 ml, or neutral oil; vinegar:1 tsp; salt:a pinch; pepper:to taste",
+  opt:"chives:1 tbsp, chopped; parsley:1 tbsp, chopped; canned tuna:2 tbsp",
+  steps:["Boil 6 eggs for 10 minutes, cool them in cold water and peel.","Cut them in half lengthways and take out the yolks.","Make mayonnaise: whisk the raw yolk with the mustard, then add the oil drop by drop, whisking, until thick. Add the vinegar and season.","Mash half the cooked yolks with the mayonnaise (and tuna) and fill the whites.","Grate or crumble the rest of the yolks over the top, like mimosa flowers.","Sprinkle with chives and chill until serving."],
+  tip:"All your ingredients at room temperature make mayonnaise far less likely to split." },
+
+{ id:"carottes-rapees", fr:"Carottes râpées", en:"Grated carrot salad", reg:"Partout en France", type:"Starter", t:10, d:1, serves:4,
+  ing:"carrots:500 g; lemon:1; olive oil:3 tbsp; Dijon mustard:1 tsp; parsley:1 tbsp, chopped; salt:a pinch; pepper:to taste",
+  opt:"honey:1 tsp; shallots:1, finely chopped",
+  steps:["Peel the carrots and grate them finely.","Whisk the lemon juice, mustard, oil, salt and pepper (and honey).","Toss the carrots with the dressing.","Let it rest for 10 minutes so the carrots soak up the flavour.","Sprinkle with parsley and serve."],
+  tip:"The finest grater side gives the soft, juicy texture of a Paris bistro version." },
+
+{ id:"tomates-provencales", fr:"Tomates provençales", en:"Baked tomatoes with garlic and herbs", reg:"Provence", type:"Side", t:40, d:1, serves:4,
+  ing:"tomatoes:6; garlic:3 cloves; parsley:a bunch; breadcrumbs:4 tbsp; olive oil:4 tbsp; salt:to taste; pepper:to taste",
+  opt:"herbes de Provence:1 tsp",
+  steps:["Heat the oven to 180 °C.","Cut the tomatoes in half, salt the cut sides and turn them upside down for 10 minutes to drain.","Mix the chopped garlic and parsley with the breadcrumbs and 2 tbsp oil.","Put the tomatoes cut side up in a baking dish and press the mixture on top.","Drizzle with the rest of the oil.","Bake for 30 minutes."],
+  tip:"Draining the tomatoes first keeps the topping crisp instead of soggy." },
+
+{ id:"puree", fr:"Purée maison", en:"Buttery mashed potatoes", reg:"Partout en France", type:"Side", t:35, d:1, serves:4,
+  ing:"potatoes:1 kg, floury; butter:100 g, cold; milk:250 ml; salt:to taste",
+  opt:"nutmeg:a pinch; pepper:to taste",
+  steps:["Peel the potatoes and cut them into even pieces.","Put them in cold salted water, bring to the boil and cook for 20–25 minutes.","Drain well and let them steam dry for 1 minute.","Mash them, or better, push them through a ricer.","Beat in the cold butter in cubes, then the hot milk little by little.","Season and serve."],
+  tip:"Never use a blender: it makes mashed potatoes gluey." },
+
+{ id:"riz-au-lait", fr:"Riz au lait", en:"Rice pudding", reg:"Normandie", type:"Dessert", t:50, d:1, serves:4,
+  ing:"rice:100 g, short or round grain; milk:1 l; sugar:80 g; water:for blanching; salt:a pinch",
+  opt:"vanilla:1 pod or 1 tsp extract; cinnamon:a pinch",
+  steps:["Boil the rice in water for 2 minutes, then drain.","Bring the milk (with vanilla) and salt to a simmer.","Add the rice and cook on very low heat for 35–40 minutes, stirring often.","Stir in the sugar for the last 5 minutes.","Serve warm or cold, with a pinch of cinnamon."],
+  tip:"In Normandy, the teurgoule version bakes for 5 hours with cinnamon. Low and slow is the key either way." },
+
+{ id:"poulet-basquaise", fr:"Poulet basquaise", en:"Basque chicken with peppers and tomato", reg:"Pays basque", type:"Main", t:60, d:2, serves:4,
+  ing:"chicken:4 thighs, bone-in; bell peppers:3, red and green; onions:2; garlic:3 cloves; canned tomatoes:1 can; olive oil:3 tbsp; white wine:100 ml; paprika:1 tsp; salt:to taste; pepper:to taste",
+  opt:"ham:2 slices, cured; thyme:2 sprigs; bay leaf:1",
+  steps:["Season the chicken and brown it in the oil for 8 minutes, then set aside.","Cook the sliced peppers, onions and garlic in the same pan for 10 minutes until soft.","Add the paprika, wine and tomatoes.","Put the chicken back, cover and simmer for 35 minutes.","Uncover and let the sauce thicken a little. Season.","Serve with rice."],
+  tip:"In the Basque Country they use piment d'Espelette. Smoked or hot paprika is a good stand-in." },
+
+{ id:"bouillabaisse", fr:"Bouillabaisse (simplifiée)", en:"Easy Marseille fish stew", reg:"Provence", type:"Main", t:60, d:3, serves:4,
+  ing:"white fish:800 g, 2–3 kinds; mussels:500 g; tomatoes:4; onions:1; garlic:3 cloves; potatoes:4; olive oil:4 tbsp; water:1.5 l; salt:to taste; pepper:to taste",
+  opt:"shrimp:8; saffron:a pinch; bread/baguette:to serve; bay leaf:1; thyme:2 sprigs",
+  steps:["Soften the chopped onion and garlic in the olive oil for 5 minutes.","Add the chopped tomatoes and cook for 5 minutes.","Add the water, saffron, herbs, sliced potatoes and salt. Boil for 15 minutes.","Add the firmest fish first and simmer for 5 minutes.","Add the delicate fish, mussels and shrimp and cook 5 minutes more, until the mussels open.","Serve the broth over toasted bread, then the fish and potatoes."],
+  tip:"In Marseille the rule is at least four kinds of fish. Any firm white fish works at home." },
+
+{ id:"coquillettes", fr:"Coquillettes jambon-emmental", en:"Pasta with ham and cheese", reg:"Partout en France", type:"Main", t:15, d:1, serves:2,
+  ing:"pasta:250 g, small shapes; ham:3 slices; butter:20 g; emmental:80 g, grated; salt:to taste; pepper:to taste",
+  opt:"crème fraîche:2 tbsp",
+  steps:["Bring a pot of salted water to the boil and cook the pasta.","Cut the ham into small pieces.","Drain the pasta, keeping a splash of the cooking water.","Put it back in the pot with the butter, ham, emmental and the water. Stir until creamy.","Add plenty of pepper and serve."],
+  tip:"The ultimate French comfort food. Some Paris chefs serve it with truffle." },
+
+{ id:"souffle-fromage", fr:"Soufflé au fromage", en:"Cheese soufflé", reg:"Partout en France", type:"Main", t:50, d:3, serves:4,
+  ing:"butter:40 g, plus extra for the dish; flour:40 g; milk:300 ml; eggs:4; gruyère:100 g, grated; salt:to taste; pepper:to taste",
+  opt:"nutmeg:a pinch; parmesan:2 tbsp, for the dish",
+  steps:["Heat the oven to 200 °C. Butter a soufflé dish well and coat it with parmesan or flour.","Make a thick béchamel with the butter, flour and milk.","Off the heat, beat in the egg yolks, the gruyère, salt, pepper and nutmeg.","Whisk the egg whites with a pinch of salt to firm peaks.","Stir a quarter of the whites into the sauce, then gently fold in the rest.","Fill the dish and run your thumb around the rim to help it rise straight.","Bake for 25 minutes without opening the oven. Serve immediately."],
+  tip:"A soufflé waits for no one: have everyone seated before it comes out." },
+
+{ id:"oeufs-meurette", fr:"Œufs en meurette", en:"Eggs poached in red wine sauce", reg:"Bourgogne", type:"Starter", t:40, d:2, serves:4,
+  ing:"eggs:8; red wine:1 bottle (75 cl); lardons/bacon:100 g; shallots:3; butter:40 g; flour:1 tbsp; bread/baguette:8 slices; thyme:2 sprigs; bay leaf:1; salt:to taste; pepper:to taste",
+  opt:"mushrooms:150 g; garlic:1 clove",
+  steps:["Simmer the wine with the chopped shallots, thyme and bay leaf for 15 minutes, until reduced by about a third.","Meanwhile, brown the lardons (and mushrooms) and toast the bread, rubbed with garlic if you like.","Lower the wine to a bare simmer and poach the eggs two at a time for 3 minutes. Keep them warm.","Strain the wine. Mash the flour with 20 g soft butter, whisk it in and simmer for 3 minutes to thicken.","Off the heat, whisk in the rest of the butter and season.","Put two eggs on each toast, spoon over the sauce and scatter the lardons."],
+  tip:"No vinegar needed for poaching here: the wine is acidic enough to set the whites." },
+
+{ id:"poireaux-vinaigrette", fr:"Poireaux vinaigrette", en:"Leeks with mustard dressing", reg:"Paris", type:"Starter", t:25, d:1, serves:4,
+  ing:"leeks:8 thin ones; Dijon mustard:1 tbsp; vinegar:1 tbsp; olive oil:4 tbsp; salt:to taste; pepper:to taste",
+  opt:"eggs:2, hard-boiled; shallots:1, finely chopped; chives:1 tbsp, chopped",
+  steps:["Trim the leeks, keeping the white and pale green. Split the tops and rinse out any grit.","Tie them in a bundle and cook in salted boiling water for 12–15 minutes until tender.","Drain, gently press out the water and let them cool a little.","Whisk the mustard, vinegar, salt and pepper, then the oil.","Lay the leeks on a plate and pour over the dressing while they're still lukewarm.","Top with chopped hard-boiled egg and chives for the bistro 'mimosa' version."],
+  tip:"Dress them warm: they soak up the vinaigrette far better than cold leeks." },
+
+{ id:"celeri-remoulade", fr:"Céleri rémoulade", en:"Celeriac in mustard mayonnaise", reg:"Paris", type:"Starter", t:20, d:1, serves:4, rest:"+ 30 min chilling",
+  ing:"celeriac:½ (about 400 g); lemon:½; eggs:1 yolk; Dijon mustard:2 tbsp; olive oil:100 ml, or a neutral oil; salt:to taste; pepper:to taste",
+  opt:"parsley:1 tbsp, chopped; capers:1 tbsp",
+  steps:["Peel the celeriac and grate it coarsely or cut it into thin matchsticks.","Toss it straight away with a squeeze of lemon and a pinch of salt so it doesn't turn brown.","Whisk the yolk with the mustard, then add the oil drop by drop, whisking, until thick.","Season and loosen with the rest of the lemon juice.","Mix the sauce into the celeriac.","Chill for 30 minutes before serving."],
+  tip:"Be generous with the mustard. A good rémoulade should have a real kick." },
+
+{ id:"salade-lentilles", fr:"Salade de lentilles", en:"Warm lentil salad", reg:"Auvergne", type:"Starter", t:35, d:1, serves:4,
+  ing:"dried lentils:250 g, green; shallots:2; carrots:1; bay leaf:1; Dijon mustard:1 tbsp; vinegar:2 tbsp; olive oil:4 tbsp; parsley:a handful; salt:to taste; pepper:to taste",
+  opt:"lardons/bacon:100 g; eggs:2; sausage:2",
+  steps:["Rinse the lentils and cover them with cold water. Add the whole carrot and bay leaf.","Simmer for 20–25 minutes, adding salt only for the last 5 minutes. Drain.","Whisk the mustard, vinegar, oil, salt and pepper.","Chop the shallots and parsley.","Toss the warm lentils with the dressing, shallots and parsley.","Top with crisp lardons or a soft-boiled egg if you have them."],
+  tip:"Dress the lentils while warm so they absorb the flavour, then serve warm or at room temperature." },
+
+{ id:"rillettes-saumon", fr:"Rillettes de saumon", en:"Salmon spread", reg:"Bretagne", type:"Starter", t:20, d:1, serves:6, rest:"+ 1 h chilling",
+  ing:"salmon:250 g fillet; smoked salmon:100 g; crème fraîche:100 g; lemon:1; chives:2 tbsp, chopped; salt:a little; pepper:to taste",
+  opt:"shallots:1, finely chopped; bread/baguette:to serve",
+  steps:["Poach the salmon in barely simmering salted water for 6–8 minutes, then let it cool.","Flake it with a fork, removing the skin.","Cut the smoked salmon into small pieces.","Mix both with the crème fraîche, lemon zest and juice, and chives.","Season carefully: the smoked salmon is already salty.","Chill for 1 hour and serve with toast."],
+  tip:"Keep the texture a little chunky. Fork, not blender." },
+
+{ id:"veloute-champignons", fr:"Velouté de champignons", en:"Cream of mushroom soup", reg:"Île-de-France", type:"Starter", t:35, d:1, serves:4,
+  ing:"mushrooms:500 g; onions:1; butter:30 g; stock cubes:1; water:800 ml; crème fraîche:100 g; salt:to taste; pepper:to taste",
+  opt:"garlic:1 clove; parsley:1 tbsp, chopped; thyme:2 sprigs",
+  steps:["Slice the mushrooms and chop the onion.","Soften the onion in the butter for 5 minutes, then add the mushrooms and cook for 8 minutes until their liquid has evaporated.","Add the water and stock cube and simmer for 15 minutes.","Blend with the crème fraîche until smooth.","Season and garnish with a few fried mushroom slices and parsley."],
+  tip:"Let the mushrooms brown a little before adding water. That's where the flavour comes from." },
+
+{ id:"soupe-potiron", fr:"Soupe de potiron", en:"Pumpkin soup", reg:"Partout en France", type:"Starter", t:40, d:1, serves:4,
+  ing:"pumpkin:1 kg; potatoes:1; onions:1; butter:30 g; milk:250 ml; water:600 ml; salt:to taste; pepper:to taste",
+  opt:"nutmeg:a pinch; crème fraîche:2 tbsp; stock cubes:1",
+  steps:["Peel, seed and cube the pumpkin. Peel and cube the potato.","Soften the chopped onion in the butter for 5 minutes.","Add the vegetables, water and salt and simmer for 25 minutes.","Blend, add the milk and reheat gently.","Season with nutmeg and serve with a swirl of crème fraîche."],
+  tip:"One potato makes it silky without needing lots of cream." },
+
+{ id:"tapenade", fr:"Tapenade", en:"Olive, caper and anchovy spread", reg:"Provence", type:"Starter", t:10, d:1, serves:6,
+  ing:"olives:200 g, black, pitted; capers:2 tbsp; anchovies:4 fillets; garlic:1 clove; olive oil:4 tbsp; lemon:½",
+  opt:"thyme:a few leaves; pepper:to taste",
+  steps:["Rinse the capers and anchovies if they're very salty.","Put everything except the oil in a blender or mortar.","Pulse or pound to a rough paste, drizzling in the oil.","Adjust with lemon and pepper.","Serve on toast or with raw vegetables."],
+  tip:"The name comes from 'tapeno', the Provençal word for capers. Don't skip them." },
+
+{ id:"tarte-tomate-moutarde", fr:"Tarte à la tomate et à la moutarde", en:"Tomato and mustard tart", reg:"Bourgogne", type:"Main", t:50, d:1, serves:6,
+  ing:"flour:200 g; butter:100 g, cold; water:3–4 tbsp, cold; salt:a pinch; tomatoes:5; Dijon mustard:3 tbsp; gruyère:80 g, grated; olive oil:1 tbsp; herbes de Provence:1 tsp; pepper:to taste",
+  opt:"puff pastry:1 sheet, instead of homemade pastry; comté:instead of gruyère",
+  steps:["Rub the flour, salt and butter together, add cold water until the dough holds, and chill for 20 minutes.","Heat the oven to 200 °C.","Slice the tomatoes, salt them and leave them on paper towels for 10 minutes.","Line a tart tin with the pastry, spread the mustard thickly and scatter over the gruyère.","Overlap the tomato slices on top, sprinkle with herbs and pepper and drizzle with oil.","Bake for 35 minutes."],
+  tip:"The cheese layer acts as a barrier so the tomato juice doesn't make the pastry soggy." },
+
+{ id:"flamiche", fr:"Flamiche aux poireaux", en:"Leek tart", reg:"Nord", type:"Main", t:70, d:2, serves:6,
+  ing:"flour:200 g; butter:130 g (100 g for pastry, 30 g for leeks); water:3–4 tbsp, cold; salt:a pinch; leeks:4; eggs:3; crème fraîche:200 g; pepper:to taste",
+  opt:"nutmeg:a pinch; puff pastry:1 sheet, instead of homemade pastry",
+  steps:["Make the pastry with the flour, salt, 100 g butter and cold water, then chill for 20 minutes.","Slice the leeks thinly and cook them in 30 g butter, covered, for 15 minutes until soft but not brown.","Heat the oven to 200 °C, line a tart tin with the pastry and bake it empty for 10 minutes.","Beat the eggs with the crème fraîche, salt, pepper and nutmeg, then stir in the leeks.","Pour into the pastry case.","Lower the oven to 180 °C and bake for 30 minutes until set and golden."],
+  tip:"In Picardy some families add a pastry lid and a little maroilles cheese." },
+
+{ id:"poulet-vallee-auge", fr:"Poulet vallée d'Auge", en:"Chicken with cider, apples and cream", reg:"Normandie", type:"Main", t:55, d:2, serves:4,
+  ing:"chicken:4 thighs; apples:2; cider:300 ml, dry; crème fraîche:150 g; shallots:2; butter:40 g; salt:to taste; pepper:to taste",
+  opt:"mushrooms:200 g; thyme:2 sprigs",
+  steps:["Season the chicken and brown it in 20 g butter, then set aside.","Soften the chopped shallots for 3 minutes, pour in the cider and scrape the pan.","Return the chicken, cover and simmer for 30 minutes.","Meanwhile, cut the apples into wedges and fry them in the rest of the butter until golden.","Lift out the chicken, boil the cider until reduced by half, then stir in the crème fraîche and simmer for 3 minutes.","Serve the chicken with the sauce and apples."],
+  tip:"Normans flambé the chicken with a splash of calvados before adding the cider." },
+
+{ id:"poulet-estragon", fr:"Poulet à l'estragon", en:"Tarragon chicken", reg:"Lyon", type:"Main", t:40, d:1, serves:4,
+  ing:"chicken:4 breasts or thighs; tarragon:a bunch; shallots:2; white wine:150 ml; crème fraîche:150 g; butter:25 g; salt:to taste; pepper:to taste",
+  opt:"stock cubes:½; mushrooms:150 g",
+  steps:["Season the chicken and brown it in the butter for 5 minutes per side.","Add the chopped shallots, the wine and the tarragon stalks.","Cover and cook for 15 minutes.","Lift out the chicken, remove the stalks and stir the crème fraîche into the pan. Reduce for 3 minutes.","Off the heat, stir in the chopped tarragon leaves.","Pour over the chicken and serve with rice."],
+  tip:"Add the leaves at the very end. Tarragon loses its aniseed freshness if it cooks too long." },
+
+{ id:"poulet-vinaigre", fr:"Poulet au vinaigre", en:"Chicken in vinegar sauce", reg:"Lyon", type:"Main", t:60, d:2, serves:4,
+  ing:"chicken:1.2 kg, in pieces; vinegar:150 ml, red wine vinegar; shallots:3; garlic:3 cloves; tomatoes:2; white wine:100 ml; butter:40 g; salt:to taste; pepper:to taste",
+  opt:"crème fraîche:2 tbsp; parsley:1 tbsp, chopped; tarragon:1 tsp",
+  steps:["Brown the chicken pieces in the butter for 10 minutes until golden all over.","Add the chopped shallots and garlic for 2 minutes.","Pour in the vinegar and let it bubble for 2 minutes.","Add the wine and the chopped tomatoes, cover and cook for 30–35 minutes.","Lift out the chicken and reduce the sauce until it's slightly syrupy. Whisk in crème fraîche or a knob of butter.","Pour over the chicken and add parsley."],
+  tip:"The smell is fierce at first, but cooking turns the vinegar mellow and rich." },
+
+{ id:"navarin", fr:"Navarin d'agneau printanier", en:"Spring lamb stew", reg:"Île-de-France", type:"Main", t:120, d:2, serves:6,
+  ing:"lamb:1.2 kg shoulder; carrots:4; potatoes:8 small; onions:2; peas:200 g; garlic:2 cloves; flour:2 tbsp; canned tomatoes:½ can; stock cubes:1; water:1 l; thyme:2 sprigs; bay leaf:1; olive oil:2 tbsp; salt:to taste; pepper:to taste",
+  opt:"green beans:150 g",
+  steps:["Cut the lamb into large cubes and brown in the oil in batches.","Soften the chopped onions for 5 minutes, return the lamb and sprinkle with flour. Stir for 1 minute.","Add the tomatoes, garlic, stock cube, water to cover and the herbs. Simmer for 1 hour.","Add the carrots and potatoes and cook for 30 minutes.","Add the peas (and green beans) for the last 10 minutes.","Skim off the fat and season."],
+  tip:"'Printanier' means spring: add whatever young vegetables you find, like turnips or new carrots." },
+
+{ id:"gigot", fr:"Gigot d'agneau rôti", en:"Roast leg of lamb", reg:"Partout en France", type:"Main", t:90, d:2, serves:6,
+  ing:"lamb:1 leg (about 2 kg); garlic:6 cloves; thyme:4 sprigs; olive oil:3 tbsp; water:200 ml; salt:to taste; pepper:to taste",
+  opt:"canned white beans:2 cans, to serve; potatoes:1 kg",
+  steps:["Take the lamb out of the fridge 1 hour ahead and heat the oven to 220 °C.","Make small cuts in the meat and push in slivers of garlic.","Rub with oil, thyme, salt and pepper.","Roast for 15 minutes, then lower to 180 °C and roast about 15 minutes per 500 g for pink meat. Baste now and then.","Rest for 15 minutes under foil.","Pour the water into the roasting dish and scrape up the juices for a simple gravy."],
+  tip:"The Easter classic is gigot with flageolet beans. Canned white beans warmed in the juices do nicely." },
+
+{ id:"daube", fr:"Daube provençale", en:"Provençal beef stew with orange and olives", reg:"Provence", type:"Main", t:210, d:2, serves:6,
+  ing:"beef (stewing):1.5 kg; red wine:1 bottle (75 cl); carrots:3; onions:2; garlic:4 cloves; orange:1, a strip of zest; olives:100 g, black; lardons/bacon:150 g; canned tomatoes:1 can; thyme:3 sprigs; bay leaf:2; olive oil:2 tbsp; salt:to taste; pepper:to taste",
+  opt:"herbes de Provence:1 tsp",
+  steps:["If you have time, marinate the beef overnight in the wine with the vegetables and herbs.","Brown the lardons, then the beef in batches with the oil.","Add the sliced onions, carrots and garlic and cook for 5 minutes.","Add the wine, tomatoes, orange zest and herbs and bring to the boil.","Cover and cook on very low heat for 3 hours.","Add the olives for the last 20 minutes and season. Serve with pasta."],
+  tip:"In Nice, leftover daube is chopped up to fill ravioli. In Provence it's served with macaroni." },
+
+{ id:"boeuf-carottes", fr:"Bœuf aux carottes", en:"Beef and carrot stew", reg:"Partout en France", type:"Main", t:180, d:1, serves:6,
+  ing:"beef (stewing):1.2 kg; carrots:1 kg; onions:2; white wine:200 ml; stock cubes:1; water:500 ml; flour:1 tbsp; butter:30 g; thyme:2 sprigs; bay leaf:1; salt:to taste; pepper:to taste",
+  opt:"lardons/bacon:100 g; parsley:1 tbsp, chopped",
+  steps:["Cut the beef into cubes and brown it in the butter.","Add the chopped onions, then sprinkle over the flour and stir.","Add the wine, water, stock cube and herbs. Simmer, covered, for 1 hour 30.","Add the sliced carrots and cook 1 hour more.","Season and sprinkle with parsley."],
+  tip:"A school-canteen and grandmother classic. Like most stews, it's better the next day." },
+
+{ id:"steak-poivre", fr:"Steak au poivre", en:"Pepper steak", reg:"Paris", type:"Main", t:20, d:2, serves:2,
+  ing:"beef steak:2 thick steaks; pepper:2 tbsp peppercorns, coarsely crushed; butter:20 g; heavy cream:150 ml; salt:to taste",
+  opt:"shallots:1, finely chopped; stock cubes:½",
+  steps:["Crush the peppercorns coarsely under a pan or in a mortar.","Salt the steaks and press the pepper firmly into both sides.","Sear in a very hot pan with the butter, about 3 minutes per side for medium-rare.","Move to a warm plate to rest.","Pour the cream into the pan (with the shallot), scrape up the juices and simmer for 2 minutes.","Pour the sauce over the steaks."],
+  tip:"Bistros flambé the pan with cognac before adding the cream. Always take the pan off the heat first." },
+
+{ id:"magret-miel", fr:"Magret de canard au miel", en:"Duck breast with honey glaze", reg:"Sud-Ouest", type:"Main", t:30, d:2, serves:2,
+  ing:"duck:1 magret (breast, about 400 g); honey:2 tbsp; vinegar:2 tbsp, balsamic or sherry; salt:to taste; pepper:to taste",
+  opt:"thyme:a few leaves; orange:½, juiced",
+  steps:["Score the skin in a criss-cross pattern without cutting into the meat.","Start skin side down in a cold pan over medium heat and cook for 10–12 minutes, pouring off the fat as it melts.","Turn and cook for 3–4 minutes on the meat side.","Rest for 5 minutes under foil.","Pour out the fat, add the honey and vinegar to the pan and let it bubble for 1 minute.","Slice the duck and pour over the glaze."],
+  tip:"Keep the duck fat in a jar. It makes the best roast potatoes." },
+
+{ id:"canard-orange", fr:"Canard à l'orange", en:"Duck with orange sauce", reg:"Paris", type:"Main", t:45, d:3, serves:4,
+  ing:"duck:2 breasts; orange:3; sugar:2 tbsp; vinegar:2 tbsp; stock cubes:1; water:200 ml; butter:20 g; salt:to taste; pepper:to taste",
+  steps:["Peel the zest of one orange into thin strips and blanch for 1 minute. Juice all the oranges.","Score the duck skin and cook skin side down for 10 minutes, then 4 minutes on the other side. Rest under foil.","Pour off the fat. Cook the sugar and vinegar in the pan to a light caramel.","Add the orange juice, water and stock cube and reduce by half, about 10 minutes.","Whisk in the butter and add the zest strips.","Slice the duck and spoon over the sauce."],
+  tip:"The sweet-sour caramel base (a 'gastrique') is what makes the sauce taste restaurant-made." },
+
+{ id:"choucroute", fr:"Choucroute garnie", en:"Sauerkraut with sausages and pork", reg:"Alsace", type:"Main", t:120, d:2, serves:6,
+  ing:"sauerkraut:1.5 kg, raw; sausage:6 (Strasbourg or Montbéliard); lardons/bacon:300 g, as a slab; ham:1 thick slice; potatoes:8; onions:1; white wine:300 ml, Riesling; bay leaf:2; butter:30 g; pepper:to taste",
+  opt:"pork:2 smoked chops; garlic:2 cloves; Dijon mustard:to serve",
+  steps:["Rinse the sauerkraut once and squeeze it dry.","Soften the sliced onion in the butter in a large pot.","Add half the sauerkraut, the bacon slab, bay leaves, then the rest of the sauerkraut.","Pour in the wine and water to come halfway up. Cover and simmer for 1 hour.","Lay the peeled potatoes and ham on top and cook for 30 minutes more.","Heat the sausages in simmering water for 10 minutes without boiling.","Pile everything on a platter and serve with mustard."],
+  tip:"A few juniper berries in the pot give the authentic Alsatian taste." },
+
+{ id:"filet-mignon-pruneaux", fr:"Filet mignon aux pruneaux", en:"Pork tenderloin with prunes", reg:"Centre-Val de Loire", type:"Main", t:45, d:2, serves:4,
+  ing:"pork:1 tenderloin (about 600 g); prunes:12; white wine:150 ml; crème fraîche:150 g; shallots:2; butter:20 g; salt:to taste; pepper:to taste",
+  opt:"stock cubes:½",
+  steps:["Soak the prunes in the warmed wine for 15 minutes.","Season the pork and brown it on all sides in the butter, about 8 minutes.","Add the chopped shallots for 2 minutes.","Pour in the prunes and wine, cover and simmer on low heat for 15 minutes.","Lift out the pork to rest. Stir the crème fraîche into the pan and reduce until it coats a spoon.","Slice the pork and serve with the sauce."],
+  tip:"A speciality of Tours, where prunes and Vouvray wine are local pride." },
+
+{ id:"lapin-moutarde", fr:"Lapin à la moutarde", en:"Rabbit in mustard sauce", reg:"Bourgogne", type:"Main", t:75, d:2, serves:4,
+  ing:"rabbit:1, cut into pieces; Dijon mustard:4 tbsp; white wine:200 ml; crème fraîche:150 g; shallots:2; lardons/bacon:100 g; butter:30 g; thyme:2 sprigs; salt:to taste; pepper:to taste",
+  opt:"mushrooms:200 g",
+  steps:["Brush the rabbit pieces with half the mustard.","Brown the lardons, then the rabbit in the butter.","Add the chopped shallots for 2 minutes.","Pour in the wine, add the thyme, cover and cook on low heat for 45 minutes, turning once.","Stir in the crème fraîche and the rest of the mustard and simmer for 5 minutes without boiling hard.","Serve with tagliatelle or potatoes."],
+  tip:"No rabbit? Chicken thighs work perfectly with the same timing." },
+
+{ id:"saint-jacques", fr:"Coquilles Saint-Jacques à la bretonne", en:"Scallops gratin", reg:"Bretagne", type:"Starter", t:30, d:2, serves:4,
+  ing:"scallops:12; shallots:2; white wine:100 ml; butter:40 g; breadcrumbs:4 tbsp; parsley:2 tbsp, chopped; garlic:1 clove; salt:to taste; pepper:to taste",
+  opt:"crème fraîche:2 tbsp; mushrooms:100 g",
+  steps:["Heat the oven grill to 220 °C.","Pat the scallops dry and sear them for 30 seconds per side in a little butter. Put 3 in each shell or ramekin.","Soften the chopped shallots in the same pan for 2 minutes, add the wine and reduce by half. Spoon over the scallops.","Mix the breadcrumbs with the chopped garlic, parsley and remaining melted butter.","Sprinkle over the scallops.","Grill for 3–4 minutes until golden."],
+  tip:"Scallops overcook in seconds. They should still be slightly translucent in the middle." },
+
+{ id:"beurre-blanc", fr:"Cabillaud au beurre blanc", en:"Cod with white butter sauce", reg:"Pays de la Loire", type:"Main", t:25, d:3, serves:4,
+  ing:"white fish:4 fillets, cod or pike; shallots:2; white wine:100 ml, Muscadet; vinegar:2 tbsp; butter:150 g, very cold; salt:to taste; pepper:to taste",
+  opt:"lemon:½; chives:1 tbsp, chopped; potatoes:to serve",
+  steps:["Put the finely chopped shallots, wine and vinegar in a small pan and reduce until only about 2 tbsp of liquid is left.","Heat the oven to 200 °C. Season the fish and bake for 10–12 minutes.","Over very low heat, whisk the cold butter into the reduction a cube at a time. Never let it boil.","Season, and strain out the shallots if you want it smooth.","Serve the fish with the sauce and boiled potatoes."],
+  tip:"If the sauce splits, take it off the heat and whisk in a spoonful of cold water." },
+
+{ id:"truite-amandes", fr:"Truite aux amandes", en:"Trout with almonds", reg:"Savoie", type:"Main", t:20, d:1, serves:2,
+  ing:"trout:2 whole or 4 fillets; almonds:40 g, flaked; flour:3 tbsp; butter:50 g; lemon:1; salt:to taste; pepper:to taste",
+  opt:"parsley:1 tbsp, chopped",
+  steps:["Season the trout and dust with flour.","Fry in half the butter, 3–4 minutes per side for fillets (longer for whole fish).","Move to warm plates.","Add the rest of the butter and the almonds to the pan and toast until golden.","Add the lemon juice and spoon everything over the fish."],
+  tip:"Watch the almonds: they turn from golden to burnt very fast." },
+
+{ id:"piperade", fr:"Piperade", en:"Basque peppers and eggs", reg:"Pays basque", type:"Main", t:40, d:1, serves:4,
+  ing:"bell peppers:4; tomatoes:5; onions:2; garlic:2 cloves; olive oil:3 tbsp; eggs:4; paprika:1 tsp; salt:to taste; pepper:to taste",
+  opt:"ham:4 slices, cured; thyme:2 sprigs",
+  steps:["Slice the onions and peppers.","Soften them in the oil for 15 minutes.","Add the garlic, chopped tomatoes and paprika and cook for 15 minutes more.","Season.","Beat the eggs and stir them in gently until just creamy (or crack them in whole and cover until set).","Serve with ham quickly fried in a pan."],
+  tip:"The colours of piperade, red, green and white, are said to match the Basque flag." },
+
+{ id:"aligot", fr:"Aligot", en:"Stretchy cheese mashed potatoes", reg:"Aveyron", type:"Side", t:40, d:2, serves:4,
+  ing:"potatoes:1 kg, floury; comté:300 g, grated; crème fraîche:150 g; butter:50 g; garlic:1 clove; salt:to taste; pepper:to taste",
+  steps:["Peel and boil the potatoes for 20 minutes.","Drain and mash until very smooth with the butter and grated garlic.","Put the pan back on low heat and stir in the crème fraîche.","Add the cheese a handful at a time, beating hard with a wooden spoon in a figure of eight.","Keep beating for about 5 minutes until it stretches in long ribbons.","Serve immediately, ideally with sausages."],
+  tip:"The real thing uses tomme fraîche from Aubrac. Comté with a little mozzarella gives the same stretch." },
+
+{ id:"pan-bagnat", fr:"Pan bagnat", en:"Niçoise salad sandwich", reg:"Provence", type:"Breakfast & snack", t:20, d:1, serves:2, rest:"+ 30 min resting",
+  ing:"bread/baguette:2 round rolls; canned tuna:1 can; tomatoes:2; eggs:2; olives:a few, black; bell peppers:½; olive oil:3 tbsp; vinegar:1 tsp; salt:to taste; pepper:to taste",
+  opt:"anchovies:4 fillets; lettuce:a few leaves; onions:a few thin rings",
+  steps:["Boil the eggs for 9 minutes, cool, peel and slice.","Cut the rolls in half and drizzle the insides with oil and vinegar.","Layer the sliced tomatoes, peppers, tuna, eggs and olives.","Season and close.","Wrap tightly and weigh down for 30 minutes so the juices soak into the bread."],
+  tip:"'Pan bagnat' means 'bathed bread' in Niçois. It should be juicy, not dry." },
+
+{ id:"parmentier-canard", fr:"Parmentier de canard", en:"Duck shepherd's pie", reg:"Sud-Ouest", type:"Main", t:50, d:1, serves:4,
+  ing:"duck:4 confit legs; potatoes:1 kg; shallots:2; milk:150 ml; butter:40 g; breadcrumbs:2 tbsp; salt:to taste; pepper:to taste",
+  opt:"garlic:1 clove; parsley:1 tbsp, chopped",
+  steps:["Peel the potatoes and boil them for 20 minutes.","Warm the duck legs, then shred the meat, discarding skin and bone. Keep a little fat.","Fry the chopped shallots in the duck fat and add the meat.","Mash the potatoes with the butter and warm milk. Season.","Spread the duck in a dish, cover with the mash and sprinkle with breadcrumbs.","Bake at 200 °C for 20 minutes until golden."],
+  tip:"Canned duck confit is a fine shortcut and keeps for months in the cupboard." },
+
+{ id:"tian", fr:"Tian provençal", en:"Baked vegetable tian", reg:"Provence", type:"Side", t:70, d:1, serves:4,
+  ing:"zucchini:2; eggplant:1; tomatoes:4; onions:1; garlic:2 cloves; olive oil:4 tbsp; herbes de Provence:1 tsp; salt:to taste; pepper:to taste",
+  opt:"parmesan:30 g, grated",
+  steps:["Heat the oven to 180 °C.","Soften the sliced onion and garlic in 1 tbsp oil and spread in a baking dish.","Slice the vegetables 5 mm thick.","Stand the slices upright in the dish in alternating rows.","Season, sprinkle with herbs and drizzle with the rest of the oil.","Cover with foil and bake for 30 minutes, then uncover for 25 minutes."],
+  tip:"Choose vegetables of a similar width so the rows look neat and cook evenly." },
+
+{ id:"petits-pois", fr:"Petits pois à la française", en:"French-style peas with lettuce", reg:"Île-de-France", type:"Side", t:25, d:1, serves:4,
+  ing:"peas:500 g, frozen is fine; lettuce:1 small head; onions:1; butter:40 g; sugar:1 tsp; water:100 ml; salt:to taste; pepper:to taste",
+  opt:"lardons/bacon:100 g",
+  steps:["Slice the onion and shred the lettuce.","Melt half the butter and soften the onion for 3 minutes.","Add the peas, lettuce, sugar, salt and water.","Cover and simmer for 10–15 minutes.","Stir in the rest of the butter and season with pepper."],
+  tip:"The lettuce melts into a sweet, buttery sauce. Don't leave it out." },
+
+{ id:"carottes-vichy", fr:"Carottes Vichy", en:"Glazed carrots", reg:"Auvergne", type:"Side", t:30, d:1, serves:4,
+  ing:"carrots:600 g; butter:30 g; sugar:1 tsp; water:to just cover; salt:a pinch; parsley:1 tbsp, chopped",
+  steps:["Peel the carrots and slice them into thin rounds.","Put them in a pan with the butter, sugar, salt and just enough water to cover.","Simmer uncovered for about 20 minutes until the water has evaporated.","Toss until the carrots are glossy.","Sprinkle with parsley."],
+  tip:"The original was cooked in Vichy mineral water. A pinch of baking soda in tap water imitates it." },
+
+{ id:"boulangere", fr:"Pommes de terre boulangère", en:"Potatoes baked in stock with onions", reg:"Partout en France", type:"Side", t:75, d:1, serves:6,
+  ing:"potatoes:1 kg; onions:2; stock cubes:1; water:500 ml; butter:40 g; thyme:3 sprigs; salt:to taste; pepper:to taste",
+  steps:["Heat the oven to 180 °C.","Slice the potatoes and onions thinly.","Soften the onions in half the butter.","Layer potatoes and onions in a dish with thyme, salt and pepper.","Dissolve the stock cube in the hot water and pour it in to just below the top layer.","Dot with the rest of the butter and bake for 1 hour until golden and the stock is absorbed."],
+  tip:"Villagers once slid this dish into the baker's oven after the bread came out, hence the name." },
+
+{ id:"gratin-chou-fleur", fr:"Gratin de chou-fleur", en:"Cauliflower cheese", reg:"Partout en France", type:"Side", t:45, d:1, serves:4,
+  ing:"cauliflower:1; butter:30 g; flour:30 g; milk:400 ml; gruyère:80 g, grated; nutmeg:a pinch; salt:to taste; pepper:to taste",
+  steps:["Cut the cauliflower into florets and boil in salted water for 8 minutes. Drain very well.","Heat the oven to 200 °C.","Make a béchamel with the butter, flour and milk. Season with salt, pepper and nutmeg.","Stir half the cheese into the sauce.","Put the cauliflower in a dish, pour over the sauce and top with the rest of the cheese.","Bake for 20 minutes until golden."],
+  tip:"Drain the florets thoroughly or the sauce turns watery in the oven." },
+
+{ id:"riz-pilaf", fr:"Riz pilaf", en:"Pilaf rice", reg:"Partout en France", type:"Side", t:25, d:1, serves:4,
+  ing:"rice:250 g, long grain; onions:1; butter:30 g; stock cubes:1; water:375 ml, boiling; bay leaf:1; salt:to taste",
+  steps:["Chop the onion and soften it in the butter.","Add the rice and stir for 2 minutes until the grains turn translucent.","Pour in the boiling water with the stock cube and bay leaf.","Cover and cook on very low heat for 17 minutes.","Rest for 5 minutes, then fluff with a fork."],
+  tip:"Toasting the rice in butter first keeps every grain separate." },
+
+{ id:"pommes-anna", fr:"Pommes Anna", en:"Crisp layered potato cake", reg:"Paris", type:"Side", t:70, d:2, serves:4,
+  ing:"potatoes:1 kg, waxy; butter:100 g, melted; salt:to taste; pepper:to taste",
+  opt:"thyme:a few leaves",
+  steps:["Heat the oven to 200 °C.","Slice the potatoes 2 mm thick. Don't rinse them; just pat dry.","Brush an ovenproof frying pan with butter.","Overlap the slices in circles, brushing each layer with butter and seasoning.","Press down firmly and start cooking on the hob for 5 minutes.","Bake for 45 minutes, pressing down halfway.","Turn out onto a plate, crispy side up."],
+  tip:"Named after Anna Deslions, a 19th-century Paris society figure who dined at the Café Anglais." },
+
+{ id:"cake-sale", fr:"Cake salé jambon-olives", en:"Savoury ham and olive loaf", reg:"Partout en France", type:"Breakfast & snack", t:60, d:1, serves:8,
+  ing:"flour:200 g; baking powder:1 tsp; eggs:3; milk:100 ml; olive oil:100 ml; ham:150 g; olives:100 g, green; gruyère:100 g, grated; salt:a pinch; pepper:to taste",
+  opt:"herbes de Provence:1 tsp",
+  steps:["Heat the oven to 180 °C and line a loaf tin.","Whisk the eggs with the flour and baking powder.","Add the milk and oil little by little.","Fold in the diced ham, sliced olives and gruyère. Season.","Pour into the tin and bake for 45 minutes until a skewer comes out clean.","Cool before slicing."],
+  tip:"A French apéritif classic. Cut it into cubes and serve with drinks." },
+
+{ id:"pain-epices", fr:"Pain d'épices", en:"French honey spice bread", reg:"Bourgogne", type:"Breakfast & snack", t:75, d:1, serves:8,
+  ing:"flour:250 g; honey:250 g; milk:150 ml; sugar:50 g; baking powder:2 tsp; eggs:1; cinnamon:2 tsp; nutmeg:½ tsp; butter:20 g, for the tin",
+  opt:"orange:zest of 1; almonds:30 g",
+  steps:["Heat the oven to 160 °C and butter a loaf tin.","Warm the honey, milk and sugar until dissolved, then let it cool.","Mix the flour, baking powder and spices.","Pour in the honey mixture, add the egg and beat until smooth.","Pour into the tin.","Bake for 50–60 minutes. Wrap and, if you can, wait a day before eating."],
+  tip:"Half rye flour gives the traditional Dijon texture. It gets better after a day or two." },
+
+{ id:"quatre-quarts", fr:"Quatre-quarts", en:"Breton pound cake", reg:"Bretagne", type:"Breakfast & snack", t:60, d:1, serves:8,
+  ing:"eggs:3 (about 180 g); butter:180 g, soft, salted ideally; sugar:180 g; flour:180 g; baking powder:1 tsp; salt:a pinch",
+  opt:"lemon:zest of 1; vanilla:a few drops",
+  steps:["Heat the oven to 180 °C and butter a loaf tin.","Weigh the eggs and use the same weight of butter, sugar and flour.","Beat the butter and sugar until pale and fluffy.","Beat in the eggs one at a time.","Fold in the flour, baking powder and salt.","Bake for 45–50 minutes."],
+  tip:"'Four quarters': equal parts of four ingredients. Bretons insist on salted butter." },
+
+{ id:"gateau-yaourt", fr:"Gâteau au yaourt", en:"Yogurt cake", reg:"Partout en France", type:"Breakfast & snack", t:45, d:1, serves:8,
+  ing:"yogurt:1 pot (125 g); sugar:2 yogurt pots; flour:3 yogurt pots; eggs:3; vegetable oil:½ yogurt pot; baking powder:1 tsp; salt:a pinch",
+  opt:"lemon:zest of 1; vanilla:a few drops; berries:a handful",
+  steps:["Heat the oven to 180 °C and oil a cake tin.","Tip the yogurt into a bowl and keep the pot to measure everything else.","Add the sugar and eggs and whisk.","Add the flour, baking powder and salt.","Stir in the oil and pour into the tin.","Bake for 30–35 minutes."],
+  tip:"The first cake most French children learn to bake. No scales needed." },
+
+{ id:"brioche", fr:"Brioche", en:"Butter brioche", reg:"Normandie", type:"Breakfast & snack", t:60, d:3, serves:8, rest:"+ 3 h rising",
+  ing:"flour:500 g; yeast:7 g, dried; milk:100 ml, lukewarm; eggs:6 (5 for the dough, 1 to glaze); sugar:60 g; butter:250 g, soft; salt:10 g",
+  steps:["Mix the flour, sugar, salt and yeast. Add the milk and 5 eggs and knead for 10 minutes until elastic (a mixer helps).","Add the butter in pieces and knead 10 minutes more until smooth and shiny.","Cover and leave to rise for 1 hour 30 until doubled.","Knock back the dough and chill for at least 2 hours (or overnight).","Shape into balls, put them in a loaf tin and let rise for 1 hour 30.","Brush with beaten egg and bake at 180 °C for 30 minutes."],
+  tip:"Cold dough is much easier to shape, so don't skip the chilling." },
+
+{ id:"ile-flottante", fr:"Île flottante", en:"Floating island", reg:"Partout en France", type:"Dessert", t:45, d:2, serves:6, rest:"+ 1 h chilling",
+  ing:"eggs:6; milk:750 ml; sugar:250 g (150 g for custard and meringue, 100 g for caramel); water:2 tbsp; salt:a pinch",
+  opt:"vanilla:1 pod or 1 tsp extract; almonds:20 g, flaked and toasted",
+  steps:["Heat the milk (with vanilla). Whisk the yolks with 75 g sugar, pour on the milk, then stir over low heat until the custard coats a spoon. Don't boil. Chill.","Whisk the whites with the salt until firm, then whisk in 75 g sugar.","Poach large spoonfuls in simmering water for 1 minute per side (or microwave for 20 seconds).","Cook 100 g sugar with the water to an amber caramel.","Pour the cold custard into bowls, float the meringues on top and drizzle with caramel."],
+  tip:"If the custard starts to look grainy, pour it straight into a cold bowl and whisk hard." },
+
+{ id:"profiteroles", fr:"Profiteroles", en:"Cream puffs with hot chocolate sauce", reg:"Paris", type:"Dessert", t:60, d:3, serves:6,
+  ing:"water:125 ml; butter:50 g; flour:75 g; eggs:3; sugar:3 tbsp; salt:a pinch; heavy cream:300 ml; chocolate:150 g, dark",
+  opt:"vanilla:a few drops",
+  steps:["Bring the water, butter, salt and 1 tbsp sugar to the boil. Tip in the flour and beat, then stir over heat for 1–2 minutes until the dough dries.","Let it cool for 2 minutes, then beat in the eggs one at a time until glossy.","Pipe or spoon 18 small balls onto a lined tray and bake at 200 °C for 25 minutes. Cool.","Whip 200 ml cream with 2 tbsp sugar to soft peaks.","Heat the remaining cream and pour it over the chopped chocolate. Stir until smooth.","Split the puffs, fill with the whipped cream and pour over the hot chocolate sauce."],
+  tip:"Bistros fill them with vanilla ice cream. Use a scoop if you have some in the freezer." },
+
+{ id:"tarte-citron", fr:"Tarte au citron", en:"Lemon tart", reg:"Provence", type:"Dessert", t:70, d:2, serves:8, rest:"+ 1 h chilling",
+  ing:"flour:200 g; butter:200 g (100 g for pastry, 100 g for filling); sugar:200 g (50 g for pastry, 150 g for filling); eggs:5 (1 for pastry, 4 for filling); lemon:4; salt:a pinch",
+  steps:["Rub the flour, salt and 100 g butter together, add 50 g sugar and 1 egg, and chill for 30 minutes.","Heat the oven to 180 °C, line a tart tin and bake empty for 20 minutes, then 5 minutes more without weights.","For the filling, whisk the lemon zest and juice, 150 g sugar and 4 eggs in a pan over low heat until thick.","Off the heat, whisk in 100 g cold butter.","Pour into the pastry case.","Chill for at least 1 hour."],
+  tip:"Menton lemons are the Riviera's pride. Unwaxed lemons are best since you use the zest." },
+
+{ id:"tarte-normande", fr:"Tarte normande aux pommes", en:"Normandy apple and cream tart", reg:"Normandie", type:"Dessert", t:70, d:2, serves:8,
+  ing:"flour:200 g; butter:100 g, cold; water:3–4 tbsp, cold; salt:a pinch; apples:4; eggs:2; crème fraîche:150 g; sugar:80 g",
+  opt:"cinnamon:a pinch; almonds:30 g, ground",
+  steps:["Make the pastry with the flour, salt, butter and cold water and chill for 20 minutes.","Heat the oven to 190 °C and line a tart tin.","Peel the apples, slice them thinly and arrange them in the case.","Bake for 15 minutes.","Whisk the eggs, sugar and crème fraîche (with cinnamon).","Pour over the apples and bake 25–30 minutes until set and golden."],
+  tip:"Normans add a splash of calvados to the cream mixture." },
+
+{ id:"financiers", fr:"Financiers", en:"Almond brown-butter cakes", reg:"Paris", type:"Breakfast & snack", t:30, d:1, serves:6, makes:"about 16 financiers",
+  ing:"almonds:100 g, ground; sugar:150 g, icing sugar ideally; flour:50 g; eggs:4 whites; butter:120 g; salt:a pinch",
+  opt:"honey:1 tbsp; berries:a few",
+  steps:["Heat the oven to 200 °C and butter small moulds.","Cook the butter until it turns nutty brown, then strain and cool.","Mix the ground almonds, sugar, flour and salt.","Stir in the egg whites (no need to whisk them).","Stir in the browned butter.","Fill the moulds and bake for 12–15 minutes."],
+  tip:"The perfect use for leftover egg whites from crème brûlée or mayonnaise." },
+
+{ id:"pots-creme", fr:"Petits pots de crème au chocolat", en:"Baked chocolate custards", reg:"Partout en France", type:"Dessert", t:45, d:1, serves:6, rest:"+ 2 h chilling",
+  ing:"milk:250 ml; heavy cream:250 ml; chocolate:120 g, dark; eggs:4 yolks; sugar:50 g",
+  opt:"vanilla:a few drops",
+  steps:["Heat the oven to 150 °C.","Heat the milk and cream and melt the chocolate into it.","Whisk the yolks and sugar, then pour the chocolate milk over, whisking.","Pour into small pots and skim off any foam.","Bake in a dish of hot water for 30–35 minutes until set with a slight wobble.","Cool, then chill for 2 hours."],
+  tip:"Cover the dish loosely with foil to stop a skin forming on top." },
+
+{ id:"galette-rois", fr:"Galette des rois", en:"Almond king cake", reg:"Paris", type:"Dessert", t:60, d:2, serves:8,
+  ing:"puff pastry:2 sheets; almonds:125 g, ground; butter:100 g, soft; sugar:100 g; eggs:3 (2 for filling, 1 to glaze)",
+  opt:"vanilla:a few drops",
+  steps:["Heat the oven to 200 °C.","Beat the butter and sugar, then beat in 2 eggs and the ground almonds.","Lay one sheet of pastry on a tray and spread the almond cream on it, leaving a 2 cm border. Hide a dried bean (the fève) inside.","Wet the border, cover with the second sheet and press the edges firmly.","Brush with beaten egg, score a pattern with a knife and poke a small hole in the middle.","Bake for 30–35 minutes."],
+  tip:"Eaten in January for Epiphany. Whoever finds the fève wears the paper crown." },
+
+{ id:"crepes-suzette", fr:"Crêpes Suzette", en:"Crêpes in orange butter sauce", reg:"Paris", type:"Dessert", t:50, d:2, serves:4,
+  ing:"flour:125 g; eggs:2; milk:250 ml; sugar:80 g; butter:80 g; orange:3; salt:a pinch",
+  opt:"lemon:½",
+  steps:["Make the batter with the flour, 1 tbsp sugar, salt, eggs, milk and 20 g melted butter. Rest for 30 minutes.","Cook 8 thin crêpes.","Zest one orange and juice all three.","In a large pan, melt 60 g butter with the remaining sugar until lightly caramelised. Add the juice and zest and simmer for 3 minutes.","Fold the crêpes in four and warm them in the sauce for 1–2 minutes, turning.","Serve with plenty of sauce."],
+  tip:"For the classic show, flambé with Grand Marnier, always with the pan off the heat." }
+];
+
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const parseList = str => !str ? [] : str.split(";").map(p=>p.trim()).filter(Boolean).map(p=>{
+  const i=p.indexOf(":"); return i<0 ? {name:p,qty:""} : {name:p.slice(0,i).trim(), qty:p.slice(i+1).trim()};
+});
+RECIPES.forEach(r => { r.req = parseList(r.ing); r.opts = parseList(r.opt); });
+const BY_ID = Object.fromEntries(RECIPES.map(r=>[r.id,r]));
+const ALL = new Set(CATS.flatMap(c=>c.items));
+const STAPLES = CATS[0].items;
+
+const TIMES=[0,15,30,60,90], DIFFS=[0,1,2,3], TYPES=["Any","Starter","Main","Side","Dessert","Breakfast & snack"];
+const DIFF_NAME={0:"Any",1:"Easy",2:"Medium",3:"Hard"};
+const TYPE_PLURAL={Any:"recipes",Starter:"starters",Main:"mains",Side:"sides",Dessert:"desserts","Breakfast & snack":"breakfast & snack recipes"};
+
+let state = { sel:new Set(STAPLES), time:0, diff:0, type:"Any", view:"fridge", region:null };
+let loaded = false;
+
+const fmtMin = m => m<60 ? `${m} min` : `${Math.floor(m/60)} h${m%60?" "+String(m%60).padStart(2,"0"):""}`;
+const HAT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 15.2A4.2 4.2 0 0 1 6.3 6.9 5.6 5.6 0 0 1 12 3.5a5.6 5.6 0 0 1 5.7 3.4 4.2 4.2 0 0 1-.7 8.3V20H7z"/><path d="M7 17.3h10" stroke="var(--card)" stroke-width="1.2"/></svg>';
+const hats = d => `<span class="hats" role="img" aria-label="${DIFF_NAME[d]}">${[1,2,3].map(i=>i<=d?HAT:HAT.replace('<svg','<svg class="off"')).join("")}</span>`;
+const servesTxt = r => r.makes ? `Makes ${r.makes}` : `Serves ${r.serves}`;
+
+/* ---------- Pantry ---------- */
+function buildPantry(){
+  const wrap=$("#cats");
+  wrap.innerHTML = CATS.map((c,ci)=>`
+    <details class="cat" data-i="${ci}" ${ci===0?"":"open"}>
+      <summary><span class="cat-name">${esc(c.name)}</span><span class="cat-count"></span></summary>
+      <div class="chips">${c.items.map(it=>`<label class="chip" data-key="${esc(norm(it))}"><input type="checkbox" value="${esc(it)}"><span>${esc(it)}</span></label>`).join("")}</div>
+    </details>`).join("");
+  wrap.addEventListener("change", e=>{
+    const cb=e.target; if(!cb.matches("input[type=checkbox]")) return;
+    cb.checked ? state.sel.add(cb.value) : state.sel.delete(cb.value);
+    update();
+  });
+}
+function syncPantry(){
+  document.querySelectorAll("#cats input").forEach(cb=>cb.checked=state.sel.has(cb.value));
+  document.querySelectorAll(".cat").forEach(d=>{
+    const items=CATS[+d.dataset.i].items, n=items.filter(i=>state.sel.has(i)).length;
+    d.querySelector(".cat-count").innerHTML=`<b>${n}</b> / ${items.length} selected`;
+  });
+}
+function applySearch(){
+  const raw=$("#search").value.trim(), q=norm(raw);
+  $("#search-x").hidden=!raw;
+  let any=false;
+  document.querySelectorAll(".cat").forEach(d=>{
+    let n=0;
+    d.querySelectorAll(".chip").forEach(ch=>{ const show=!q||ch.dataset.key.includes(q); ch.hidden=!show; if(show)n++; });
+    d.hidden = !!q && n===0;
+    if(q && n) d.open=true;
+    if(n) any=true;
+  });
+  $("#search-empty").hidden = !q || any;
+}
+
+/* ---------- Filters ---------- */
+function buildSeg(sel,opts,label,key){
+  const el=$(sel);
+  el.innerHTML=opts.map(o=>`<button type="button" data-v="${esc(o)}">${esc(label(o))}</button>`).join("");
+  el.addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    state[key] = key==="type" ? b.dataset.v : +b.dataset.v;
+    update();
+  });
+}
+function syncFilters(){
+  [["#f-time","time"],["#f-diff","diff"],["#f-type","type"]].forEach(([s,k])=>{
+    document.querySelectorAll(s+" button").forEach(b=>b.setAttribute("aria-pressed",String(String(state[k])===b.dataset.v)));
+  });
+}
+
+/* ---------- Matching ---------- */
+const passes = (r,f) => (!f.time||r.t<=f.time) && (!f.diff||r.d===f.diff) && (f.type==="Any"||r.type===f.type);
+function match(f){
+  const now=[], near=[];
+  RECIPES.forEach(r=>{
+    if(!passes(r,f)) return;
+    const miss=r.req.filter(x=>!state.sel.has(x.name)).map(x=>x.name);
+    if(!miss.length) now.push({r,miss}); else if(miss.length<=2) near.push({r,miss});
+  });
+  const by=(a,b)=>a.miss.length-b.miss.length || a.r.t-b.r.t;
+  now.sort(by); near.sort(by);
+  return {now,near};
+}
+function bestBuy(near){
+  const c=[...new Set(near.flatMap(x=>x.miss))];
+  const unlocked=set=>near.filter(x=>x.miss.every(m=>set.includes(m))).length;
+  let best={items:[],n:0};
+  const consider=items=>{ const n=unlocked(items); if(n>best.n || (n===best.n && n>0 && items.length<best.items.length)) best={items,n}; };
+  for(let i=0;i<c.length;i++){ consider([c[i]]);
+    for(let j=i+1;j<c.length;j++){ consider([c[i],c[j]]);
+      for(let k=j+1;k<c.length;k++) consider([c[i],c[j],c[k]]); } }
+  return best;
+}
+
+/* ---------- Rendering ---------- */
+function card(x,showMissing,showReady,extra){
+  const r=x.r, have=r.req.length-x.miss.length, pct=Math.round(have/r.req.length*100);
+  return `<button class="card" type="button" data-id="${r.id}">
+    <span class="r-main">
+      <span class="r-fr">${esc(r.fr)}</span>
+      <span class="r-en">${esc(r.en)}</span>
+      ${showMissing?`<span class="missing">Missing: ${x.miss.slice(0,3).map(esc).join(", ")}${x.miss.length>3?` and ${x.miss.length-3} more`:""}</span>`:""}
+      ${showReady&&!x.miss.length?`<span class="ready">✓ Ready to cook now</span>`:""}
+      ${extra||""}
+    </span>
+    <span class="r-cols">
+      <span class="r-region">${esc(r.reg)}</span>
+      <span>⏱ ${fmtMin(r.t)}${r.rest?` <span class="rest">${esc(r.rest)}</span>`:""}</span>
+      <span>${esc(servesTxt(r))}</span>
+      ${hats(r.d)}
+      <span class="match"><span class="bar"><i style="width:${pct}%"></i></span><span>${have} / ${r.req.length} ingredients</span></span>
+    </span>
+  </button>`;
+}
+const plural=(n,one,many)=>`${n} ${n===1?one:many}`;
+
+function describeFilters(f){
+  const d=f.diff?DIFF_NAME[f.diff].toLowerCase()+" ":"";
+  const t=f.time?` under ${f.time} min`:"";
+  return `No ${d}${TYPE_PLURAL[f.type]}${t} with what you have.`;
+}
+function fixesFor(){
+  const fixes=[]; const has=f=>{const m=match(f); return m.now.length+m.near.length>0;};
+  if(state.time){
+    const next=TIMES.filter(t=>t>state.time).concat(0).find(t=>has({...state,time:t}));
+    if(next!==undefined) fixes.push({label: next?`Try ${next} min?`:"Try any time?", patch:{time:next}});
+  }
+  if(state.diff && has({...state,diff:0})) fixes.push({label:"Try any difficulty?", patch:{diff:0}});
+  if(state.type!=="Any" && has({...state,type:"Any"})) fixes.push({label:"Try any dish type?", patch:{type:"Any"}});
+  if(!fixes.length) fixes.push({label:"Clear all filters", patch:{time:0,diff:0,type:"Any"}});
+  return fixes;
+}
+
+function render(){
+  const res=$("#results"), link=$("#jump-link");
+  const extra=[...state.sel].filter(x=>!STAPLES.includes(x));
+  if(!extra.length){
+    const picks=["omelette","crepes","coquillettes"].map(id=>({r:BY_ID[id],miss:BY_ID[id].req.map(x=>x.name).filter(n=>!state.sel.has(n))}));
+    res.innerHTML=`<div class="notice"><h3>Tick what's in your fridge to see recipes</h3>
+      <p>The table is set, but the fridge looks empty. Not sure where to start? Grand-mère's three easiest classics need almost nothing.</p></div>
+      <div class="grid" style="margin-top:8px;border-top:1px solid var(--line)">${picks.map(p=>card(p,false,false,`<span>Needs: ${p.miss.map(esc).join(", ")||"just your staples"}</span>`)).join("")}</div>`;
+    link.textContent="Tick a few ingredients to start";
+    link.setAttribute("href","#h-fridge");
+    return;
+  }
+  link.setAttribute("href","#results");
+  const {now,near}=match(state);
+  if(!now.length && !near.length){
+    const unf=match({...state,time:0,diff:0,type:"Any"});
+    if(!unf.now.length && !unf.near.length){
+      res.innerHTML=`<div class="notice"><h3>Hmm, not quite a meal yet</h3><p>None of the ${RECIPES.length} recipes are within two ingredients of your fridge. Tick a few more things you have: onions, garlic, eggs or potatoes open lots of doors.</p></div>`;
+    } else {
+      res.innerHTML=`<div class="notice"><h3>${esc(describeFilters(state))}</h3><p>Loosen one filter to see more.</p>
+        <div class="actions">${fixesFor().map(f=>`<button class="btn red" type="button" data-fix='${esc(JSON.stringify(f.patch))}'>${esc(f.label)}</button>`).join("")}</div></div>`;
+    }
+    link.textContent="No matches with these filters";
+    return;
+  }
+  const buy=bestBuy(near);
+  res.innerHTML=`
+    <div class="section-head"><h2>✅ You can make this now</h2><span class="count">${plural(now.length,"recipe","recipes")}</span><span class="sub-k">C'est chouette: everything's already in your kitchen.</span></div>
+    ${now.length?`<div class="grid">${now.map(x=>card(x,false)).join("")}</div>`
+      :`<p class="empty-line">Nothing is fully ready yet. The recipes below are only one or two items away.</p>`}
+    <div class="section-head" style="transform:rotate(.8deg)"><h2>🛒 Missing just 1–2 ingredients</h2><span class="count">${plural(near.length,"recipe","recipes")}</span><span class="sub-k">One quick stop at the épicerie on the way home.</span></div>
+    ${near.length?`<div class="grid">${near.map(x=>card(x,true)).join("")}</div>`
+      :`<p class="empty-line">No recipes are one or two ingredients away with these filters.</p>`}
+    ${buy.n?`<div class="hint"><p>Buy ${buy.items.length===1?"this item":`these ${buy.items.length} items`} to unlock ${plural(buy.n,"more recipe","more recipes")}:<br><strong>${buy.items.map(esc).join(", ")}</strong></p>
+      <button class="btn" type="button" id="got-them" data-items='${esc(JSON.stringify(buy.items))}'>I've got them, tick them</button></div>`:""}`;
+  link.textContent=`${now.length} ready to cook, ${near.length} almost`;
+}
+
+/* ---------- Region map ---------- */
+// Simplified outline of mainland France and Corsica as [longitude, latitude] points
+const OUTLINE=[[2.37,51.05],[2.55,51.08],[3.15,50.78],[3.62,50.48],[4.0,50.3],[4.85,50.15],[5.0,49.75],[5.8,49.55],[6.4,49.47],[7.0,49.12],[8.2,48.98],[7.8,48.6],[7.55,47.9],[7.6,47.6],[7.0,47.5],[6.45,47.0],[6.1,46.6],[6.1,46.2],[6.8,46.4],[7.0,45.9],[6.8,45.2],[7.1,44.9],[6.9,44.4],[7.55,43.8],[7.25,43.7],[6.95,43.55],[6.6,43.25],[5.9,43.1],[5.35,43.3],[4.6,43.35],[3.9,43.5],[3.65,43.38],[3.1,43.15],[3.05,42.75],[3.17,42.44],[2.6,42.35],[1.7,42.5],[0.7,42.8],[-0.3,42.8],[-1.4,43.05],[-1.78,43.37],[-1.56,43.48],[-1.25,44.3],[-1.25,44.65],[-1.1,45.5],[-1.2,46.15],[-1.9,46.7],[-2.2,47.25],[-2.75,47.5],[-3.4,47.7],[-3.9,47.85],[-4.7,48.03],[-4.75,48.4],[-4.7,48.6],[-3.98,48.72],[-3.4,48.83],[-2.0,48.65],[-1.5,48.63],[-1.6,48.84],[-1.95,49.7],[-1.6,49.65],[-1.27,49.67],[-1.1,49.35],[-0.3,49.3],[0.1,49.48],[0.2,49.7],[1.08,49.93],[1.6,50.2],[1.6,50.73],[1.85,50.95]];
+const CORSICA=[[9.4,43.0],[9.5,42.6],[9.55,42.1],[9.25,41.4],[8.8,41.6],[8.6,42.0],[8.6,42.4],[9.0,42.7],[9.3,42.95]];
+// Pins: placed at each region's main city; "side" sets where the label goes
+const PINS=[
+  {id:"nord",label:"Nord",regs:["Nord"],ll:[3.06,50.63],side:"r"},
+  {id:"normandie",label:"Normandie",regs:["Normandie"],ll:[-0.37,49.18],side:"l"},
+  {id:"paris",label:"Paris & Île-de-France",short:"Paris",regs:["Paris","Île-de-France"],ll:[2.35,48.86],side:"r"},
+  {id:"lorraine",label:"Lorraine",regs:["Lorraine"],ll:[6.18,48.69],side:"t"},
+  {id:"alsace",label:"Alsace",regs:["Alsace"],ll:[7.6,48.3],side:"b"},
+  {id:"bretagne",label:"Bretagne",regs:["Bretagne"],ll:[-3.0,48.1],side:"r"},
+  {id:"loire",label:"Pays de la Loire",regs:["Pays de la Loire"],ll:[-1.55,47.22],side:"b"},
+  {id:"centre",label:"Centre-Val de Loire",short:"Val de Loire",regs:["Centre-Val de Loire"],ll:[1.7,47.4],side:"b"},
+  {id:"bourgogne",label:"Bourgogne",regs:["Bourgogne"],ll:[5.04,47.32],side:"r"},
+  {id:"bresse",label:"Bresse",regs:["Bresse"],ll:[5.2,46.3],side:"r"},
+  {id:"lyon",label:"Lyon",regs:["Lyon"],ll:[4.84,45.76],side:"l"},
+  {id:"savoie",label:"Savoie",regs:["Savoie"],ll:[6.4,45.6],side:"r"},
+  {id:"dauphine",label:"Dauphiné",regs:["Dauphiné"],ll:[5.72,45.15],side:"b"},
+  {id:"limousin",label:"Limousin",regs:["Limousin"],ll:[1.5,45.75],side:"l"},
+  {id:"auvergne",label:"Auvergne",regs:["Auvergne"],ll:[3.05,45.45],side:"b"},
+  {id:"perigord",label:"Périgord",regs:["Périgord"],ll:[0.85,45.0],side:"l"},
+  {id:"aveyron",label:"Aveyron",regs:["Aveyron"],ll:[2.6,44.35],side:"r"},
+  {id:"sudouest",label:"Sud-Ouest",regs:["Sud-Ouest"],ll:[0.1,44.1],side:"l"},
+  {id:"provence",label:"Provence",regs:["Provence"],ll:[5.9,43.75],side:"r"},
+  {id:"languedoc",label:"Languedoc",regs:["Languedoc"],ll:[3.3,43.65],side:"b"},
+  {id:"basque",label:"Pays basque",regs:["Pays basque"],ll:[-1.3,43.3],side:"b"}
+];
+const PARTOUT={id:"partout",label:"Partout en France",regs:["Partout en France"]};
+const ALL_PINS=[...PINS,PARTOUT];
+const PIN_BY_ID=Object.fromEntries(ALL_PINS.map(p=>[p.id,p]));
+const K=60, LON0=-5.3, LAT0=51.35, CX=Math.cos(46.5*Math.PI/180);
+const proj=([lon,lat])=>[+((lon-LON0)*CX*K).toFixed(1), +((LAT0-lat)*K).toFixed(1)];
+const MAP_W=Math.ceil((9.8-LON0)*CX*K), MAP_H=Math.ceil((LAT0-41.2)*K);
+const pathOf=pts=>"M"+pts.map(p=>proj(p).join(",")).join("L")+"Z";
+
+function regionList(pin){
+  return RECIPES.filter(r=>pin.regs.includes(r.reg))
+    .map(r=>({r,miss:r.req.filter(x=>!state.sel.has(x.name)).map(x=>x.name)}))
+    .sort((a,b)=>a.miss.length-b.miss.length||a.r.t-b.r.t);
+}
+function buildMap(){
+  const svg=$("#map");
+  svg.setAttribute("viewBox",`0 0 ${MAP_W} ${MAP_H}`);
+  svg.innerHTML=`<path class="land" d="${pathOf(OUTLINE)}"/><path class="land" d="${pathOf(CORSICA)}"/>`+
+    PINS.map(p=>{
+      const n=RECIPES.filter(r=>p.regs.includes(r.reg)).length, [x,y]=proj(p.ll), rad=Math.round(12+Math.sqrt(n)*2.2);
+      const pos={r:[x+rad+6,y+5,"start"],l:[x-rad-6,y+5,"end"],t:[x,y-rad-8,"middle"],b:[x,y+rad+20,"middle"]}[p.side];
+      return `<g class="pin" data-pin="${p.id}" role="button" tabindex="0" aria-label="${esc(p.label)}, ${plural(n,"dish","dishes")}">
+        <circle class="ring" cx="${x}" cy="${y}" r="${rad+4}" visibility="hidden"/>
+        <circle class="dot" cx="${x}" cy="${y}" r="${rad}"/>
+        <text class="n" x="${x}" y="${y}">${n}</text>
+        <text class="lb" x="${pos[0]}" y="${pos[1]}" text-anchor="${pos[2]}">${esc(p.short||p.label)}</text></g>`;
+    }).join("");
+  const pick=e=>{ const g=e.target.closest(".pin"); if(!g) return; state.region=g.dataset.pin; update(); scrollToPanel(); };
+  svg.addEventListener("click",pick);
+  svg.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); pick(e); } });
+  $("#region-chips").innerHTML=ALL_PINS.map(p=>`<button type="button" data-pin="${p.id}">${esc(p.label)} (${RECIPES.filter(r=>p.regs.includes(r.reg)).length})</button>`).join("");
+  $("#region-chips").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; state.region=b.dataset.pin; update(); scrollToPanel(); });
+  $("#region-panel").addEventListener("click",e=>{ const c=e.target.closest(".card"); if(c) openDetail(c.dataset.id); });
+}
+function scrollToPanel(){
+  if(window.matchMedia("(max-width:899px)").matches) $("#region-panel").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"});
+}
+function renderMap(){
+  document.querySelectorAll("#map .pin").forEach(g=>{
+    const p=PIN_BY_ID[g.dataset.pin];
+    g.classList.toggle("on",state.region===p.id);
+    g.querySelector(".ring").setAttribute("visibility",regionList(p).some(x=>!x.miss.length)?"visible":"hidden");
+  });
+  document.querySelectorAll("#region-chips button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.pin===state.region)));
+  const panel=$("#region-panel"), pin=PIN_BY_ID[state.region];
+  if(!pin){
+    panel.innerHTML=`<div class="notice" style="margin-top:0"><h3>Pick a region, any region</h3><p>Tap a pin on the map, or a name in the list, to see the dishes that come from there. Classics cooked all over the country are under "Partout en France".</p></div>`;
+    return;
+  }
+  const list=regionList(pin), ready=list.filter(x=>!x.miss.length).length;
+  panel.innerHTML=`<div class="section-head"><h2>${esc(pin.label)}</h2><span class="count">${plural(list.length,"dish","dishes")}</span></div>
+    <p class="region-note">${ready?`You can cook ${ready} of these right now.`:"Nothing here is ready with your fridge yet: missing items are shown in red."} Your filters don't apply on the map.</p>
+    <div class="grid">${list.map(x=>card(x,x.miss.length>0,true)).join("")}</div>`;
+}
+function setView(v){
+  state.view=v;
+  $("#results").hidden = v!=="fridge";
+  $("#map-view").hidden = v!=="map";
+  $("#jump").hidden = v!=="fridge";
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.view===v)));
+}
+
+/* ---------- Detail ---------- */
+function openDetail(id){
+  const r=BY_ID[id]; if(!r) return;
+  const q=encodeURIComponent(r.fr).replace(/%20/g,"+");
+  const yt=`https://www.youtube.com/results?search_query=${q}+recette`;
+  const li=(x,cls,mk,label)=>`<li class="${cls}"><span class="mk" aria-label="${label}">${mk}</span><span>${esc(x.name)}</span><span class="q">${esc(x.qty)}</span></li>`;
+  const missing=r.req.filter(x=>!state.sel.has(x.name)).length;
+  $("#detail-inner").innerHTML=`
+    <div class="d-head">
+      <h2 id="d-title">${esc(r.fr)}</h2>
+      <div class="en">${esc(r.en)}, ${esc(r.reg)}</div>
+      <div class="meta"><span>⏱ ${fmtMin(r.t)}${r.rest?` ${esc(r.rest)}`:""}</span>${hats(r.d)}<span>${esc(servesTxt(r))}</span><span>${esc(r.type)}</span></div>
+      <button class="x" type="button" data-close aria-label="Close">×</button>
+    </div>
+    <div class="d-body">
+      <h3>Ingredients${missing?` <span style="color:var(--red);font-size:1rem;font-family:var(--sans)">(${missing} missing)</span>`:""}</h3>
+      <ul class="ings">${r.req.map(x=>state.sel.has(x.name)?li(x,"ok","✓","You have it"):li(x,"no","✗","Missing")).join("")}</ul>
+      ${r.opts.length?`<h3>Optional</h3><ul class="ings">${r.opts.map(x=>state.sel.has(x.name)?li(x,"ok","✓","You have it"):li(x,"opt","○","Optional")).join("")}</ul>`:""}
+      <h3>Start cooking</h3>
+      <ol class="steps">${r.steps.map(s=>`<li><span>${esc(s)}</span></li>`).join("")}</ol>
+      <div class="tip"><b>Astuce du chef</b><span>${esc(r.tip)}</span></div>
+      <div class="d-actions">
+        <a class="yt" href="${yt}" target="_blank" rel="noopener noreferrer">▶ Watch on YouTube</a>
+        <button class="btn" type="button" data-close>Close</button>
+      </div>
+    </div>`;
+  const dlg=$("#detail");
+  if(!dlg.open) dlg.showModal();
+  dlg.scrollTop=0;
+}
+
+/* ---------- Saving ---------- */
+// Outside Claude artifacts there is no window.storage: fall back to localStorage
+if(!window.storage){
+  try{ localStorage.setItem("gf:test","1"); localStorage.removeItem("gf:test");
+    window.storage={ get:async k=>{ const v=localStorage.getItem(k); return v==null?null:{value:v}; },
+                     set:async (k,v)=>{ localStorage.setItem(k,v); } };
+  }catch(e){}
+}
+const KEY="gastrofridge:state";
+let saveTimer;
+function save(){
+  if(!loaded || !window.storage) return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    try{ await window.storage.set(KEY, JSON.stringify({sel:[...state.sel],time:state.time,diff:state.diff,type:state.type,view:state.view,region:state.region}), false); }catch(e){}
+  },400);
+}
+async function load(){
+  if(!window.storage) return;
+  try{
+    const r=await window.storage.get(KEY,false);
+    if(r && r.value){
+      const v=JSON.parse(r.value);
+      if(Array.isArray(v.sel)) state.sel=new Set(v.sel.filter(x=>ALL.has(x)));
+      if(TIMES.includes(v.time)) state.time=v.time;
+      if(DIFFS.includes(v.diff)) state.diff=v.diff;
+      if(TYPES.includes(v.type)) state.type=v.type;
+      if(v.view==="map"||v.view==="fridge") state.view=v.view;
+      if(v.region && PIN_BY_ID[v.region]) state.region=v.region;
+    }
+  }catch(e){ /* first visit: nothing saved yet */ }
+}
+
+/* ---------- Wiring ---------- */
+function update(){ syncPantry(); syncFilters(); render(); setView(state.view); renderMap(); save(); }
+function say(msg){ const s=$("#status"); s.textContent=msg; clearTimeout(say.t); say.t=setTimeout(()=>s.textContent="",4000); }
+
+buildPantry();
+buildMap();
+$("#meta-count").textContent=`${RECIPES.length} recettes`;
+$("#fridge-total").textContent=`${ALL.size} ingredients`;
+$("#nav-map").addEventListener("click",()=>{ state.view="map"; update(); });
+document.querySelector(".tabs").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b){ state.view=b.dataset.view; update(); } });
+document.querySelector(".tabs").addEventListener("keydown",e=>{
+  if(e.key!=="ArrowLeft"&&e.key!=="ArrowRight") return;
+  state.view = state.view==="fridge"?"map":"fridge"; update(); $("#tab-"+state.view).focus();
+});
+buildSeg("#f-time",TIMES,v=>v?`${v} min`:"Any","time");
+buildSeg("#f-diff",DIFFS,v=>DIFF_NAME[v],"diff");
+buildSeg("#f-type",TYPES,v=>v,"type");
+
+$("#search").addEventListener("input",applySearch);
+$("#search-x").addEventListener("click",()=>{ $("#search").value=""; applySearch(); $("#search").focus(); });
+$("#clear").addEventListener("click",()=>{ state.sel=new Set(); update(); say("Table cleared."); });
+$("#staples").addEventListener("click",()=>{ STAPLES.forEach(s=>state.sel.add(s)); update(); say("Staples ticked again."); });
+$("#surprise").addEventListener("click",()=>{
+  const {now}=match(state);
+  if(!now.length){ say("Nothing is ready to cook yet. Tick a few more ingredients or loosen the filters."); return; }
+  openDetail(now[Math.floor(Math.random()*now.length)].r.id);
+});
+$("#results").addEventListener("click",e=>{
+  const c=e.target.closest(".card"); if(c){ openDetail(c.dataset.id); return; }
+  const f=e.target.closest("[data-fix]"); if(f){ Object.assign(state,JSON.parse(f.dataset.fix)); update(); return; }
+  const g=e.target.closest("#got-them"); if(g){ JSON.parse(g.dataset.items).forEach(i=>state.sel.add(i)); update(); say("Ticked. Bon appétit !"); }
+});
+const dlg=$("#detail");
+dlg.addEventListener("click",e=>{ if(e.target===dlg || e.target.closest("[data-close]")) dlg.close(); });
+
+// Hide the jump pill once the results are on screen
+if("IntersectionObserver" in window){
+  new IntersectionObserver(([en])=>{ $("#jump").style.visibility = en.isIntersecting ? "hidden" : "visible"; },{rootMargin:"0px 0px -40% 0px"}).observe($("#results"));
+}
+
+update();
+load().then(()=>{ loaded=true; update(); });
+</script>
+</body>
+</html>
